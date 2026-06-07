@@ -32,6 +32,7 @@ public enum ErrorCode {
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
     POST_AUTHOR_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글 작성자를 찾을 수 없습니다."),
     POST_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "게시글 작성자만 수정할 수 있습니다."),
+    POST_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "게시글 작성자만 삭제할 수 있습니다."),
 
     // Post - validation
     INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "size는 1 이상이어야 합니다."),

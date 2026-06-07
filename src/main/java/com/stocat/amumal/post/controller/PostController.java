@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,6 +56,15 @@ public class PostController {
             @Positive @RequestParam("user_id") Long userId
     ) {
         return ApiResponse.of("게시글 조회에 성공했습니다.", postService.getPost(postId, userId));
+    }
+
+    @DeleteMapping("/{post_id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePost(
+            @Positive @PathVariable("post_id") Long postId,
+            @Positive @RequestParam("user_id") Long userId
+    ) {
+        postService.deletePost(postId, userId);
     }
 
     @PatchMapping("/{post_id}")

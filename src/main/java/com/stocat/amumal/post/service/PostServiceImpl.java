@@ -113,6 +113,19 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    public void deletePost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new ApiException(ErrorCode.POST_DELETE_FORBIDDEN);
+        }
+
+        postRepository.delete(post);
+    }
+
+    @Override
+    @Transactional
     public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
