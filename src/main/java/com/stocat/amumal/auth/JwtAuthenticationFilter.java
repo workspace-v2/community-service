@@ -53,7 +53,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new IllegalArgumentException("Not access token");
             }
 
-            // 여기서는 인증 정보 전달 없이 통과만 시킴
+            // JWT subject(userId)를 추출해 request attribute에 저장
+            // → 이후 AuthUserIdArgumentResolver가 꺼내서 @AuthUserId 파라미터에 주입
+            request.setAttribute("userId", jwtProvider.getUserId(token));
             filterChain.doFilter(request, response);
 
         } catch (Exception exception) {
