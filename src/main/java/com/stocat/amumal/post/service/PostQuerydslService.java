@@ -58,4 +58,13 @@ public class PostQuerydslService {
     private BooleanExpression cursorLt(Long cursor) {
         return cursor != null ? post.id.lt(cursor) : null;
     }
+
+    @Transactional
+    public void incrementViewCount(Long postId, int delta) {
+        queryFactory
+                .update(post)
+                .set(post.viewCount, post.viewCount.add(delta))
+                .where(post.id.eq(postId))
+                .execute();
+    }
 }
