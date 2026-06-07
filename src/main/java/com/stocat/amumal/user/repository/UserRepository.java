@@ -1,25 +1,15 @@
 package com.stocat.amumal.user.repository;
 
 import com.stocat.amumal.user.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-// 저장소 접근 메서드 정의
-public interface UserRepository {
-
-    User save(String email, String password, String nickname, String profileImage);
-
-    User updateProfile(Long userId, String nickname, String profileImage);
-
-    User updatePassword(Long userId, String password);
+public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
     boolean existsByNickname(String nickname);
 
     Optional<User> findByEmail(String email);
-
-    Optional<User> findById(Long userId);
-
-    void deleteById(Long userId);
 }

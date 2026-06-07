@@ -1,45 +1,51 @@
 package com.stocat.amumal.user.domain;
 
-public class User {
+import com.stocat.amumal.common.entity.BaseTimeEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    // id, email 값은 변경 불가능 (setter 도 존재하지 않음)
-    private final Long id;
-    private final String email;
+@Entity
+@Table(name = "users")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false, length = 10)
     private String nickname;
-    private String profileImage;
 
-    public User(Long id, String email, String password, String nickname, String profileImage) {
-        this.id = id;
-        this.email = email;
-        this.password = password;
+    @Column(length = 500)
+    private String profileImageUrl;
+
+    public static User of(String email, String password, String nickname, String profileImageUrl) {
+        User user = new User();
+        user.email = email;
+        user.password = password;
+        user.nickname = nickname;
+        user.profileImageUrl = profileImageUrl;
+        return user;
+    }
+
+    public void updateProfile(String nickname, String profileImageUrl) {
         this.nickname = nickname;
-        this.profileImage = profileImage;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getProfileImage() {
-        return profileImage;
-    }
-
-    public void updateProfile(String nickname, String profileImage) {
-        this.nickname = nickname;
-        this.profileImage = profileImage;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void updatePassword(String password) {
