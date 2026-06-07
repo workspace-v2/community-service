@@ -8,6 +8,7 @@ import com.stocat.amumal.post.dto.GetPostsResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
 import com.stocat.amumal.post.service.PostService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -34,7 +35,7 @@ public class PostController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<CreatePostResponse> createPost(@RequestBody CreatePostRequest request) {
+    public ApiResponse<CreatePostResponse> createPost(@Valid @RequestBody CreatePostRequest request) {
         return ApiResponse.of("게시글이 생성되었습니다.", postService.createPost(request));
     }
 
@@ -60,7 +61,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<UpdatePostResponse> updatePost(
             @Positive @PathVariable("post_id") Long postId,
-            @RequestBody UpdatePostRequest request
+            @Valid @RequestBody UpdatePostRequest request
     ) {
         return ApiResponse.of("게시글이 수정되었습니다.", postService.updatePost(postId, request));
     }
