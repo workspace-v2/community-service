@@ -1,6 +1,7 @@
 package com.stocat.amumal.auth.service;
 
 import com.stocat.amumal.auth.JwtProvider;
+import com.stocat.amumal.auth.TokenConstants;
 import com.stocat.amumal.auth.domain.RefreshTokenEntry;
 import com.stocat.amumal.auth.dto.LoginRequest;
 import com.stocat.amumal.auth.dto.LoginResponse;
@@ -57,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshTokenValue = jwtProvider.createRefreshToken(user.getId());
         refreshTokenStore.deleteByUserId(user.getId());
         refreshTokenStore.save(
-                new RefreshTokenEntry(refreshTokenValue, user.getId(), LocalDateTime.now().plusDays(14)));
+                new RefreshTokenEntry(refreshTokenValue, user.getId(), LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
 
         // 응답 바디(LoginResponse)와 쿠키용 리프레시 토큰을 분리해 반환
         long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
@@ -92,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
         String newRefreshTokenValue = jwtProvider.createRefreshToken(user.getId());
         refreshTokenStore.delete(refreshToken);
         refreshTokenStore.save(
-                new RefreshTokenEntry(newRefreshTokenValue, user.getId(), LocalDateTime.now().plusDays(14)));
+                new RefreshTokenEntry(newRefreshTokenValue, user.getId(), LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
 
         // 새 액세스 토큰(응답 바디)과 새 리프레시 토큰(쿠키 교체용)을 분리해 반환
         long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();

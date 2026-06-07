@@ -2,6 +2,7 @@ package com.stocat.amumal.auth.repository;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.stocat.amumal.auth.TokenConstants;
 import com.stocat.amumal.auth.domain.RefreshTokenEntry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class CaffeineRefreshTokenStore implements RefreshTokenStore {
 
     private final Cache<String, RefreshTokenEntry> cache = Caffeine.newBuilder()
-            .expireAfterWrite(14, TimeUnit.DAYS)
+            .expireAfterWrite(TokenConstants.REFRESH_TOKEN_TTL_DAYS, TimeUnit.DAYS)
             .build();
 
     @Override
