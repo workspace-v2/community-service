@@ -16,7 +16,6 @@ import com.stocat.amumal.post.validator.PostValidator;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import java.util.List;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +62,8 @@ public class PostServiceImpl implements PostService {
         postValidator.validateListSize(size);
 
         // 다음 페이지 존재 여부를 확인하기 위해 요청 개수보다 1개 더 조회
-        List<Post> posts = postRepository.findAllByCursor(cursor, PageRequest.of(0, size + 1));
+        // List<Post> posts = postRepository.findAllByCursor(cursor, PageRequest.of(0, size + 1));
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc(); // TODO: 삭제
         boolean hasNext = posts.size() > size;
         List<Post> pagePosts = hasNext ? posts.subList(0, size) : posts;
 
