@@ -1,21 +1,29 @@
 package com.stocat.amumal.post.service;
 
 import com.stocat.amumal.common.DateTimeConstants;
+import com.stocat.amumal.common.config.CacheConfig;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.post.domain.Post;
+import com.stocat.amumal.post.domain.PostLike;
+import com.stocat.amumal.post.domain.PostLikeId;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.GetPostsResponse;
+import com.stocat.amumal.post.dto.PostLikeRequest;
+import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
+import com.stocat.amumal.post.repository.PostLikeRepository;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.validator.PostValidator;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import java.util.List;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,15 +31,31 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final PostLikeRepository postLikeRepository;
     private final PostQuerydslService postQuerydslService;
     private final UserRepository userRepository;
     private final PostValidator postValidator;
+    private final CacheManager cacheManager;
 
-    public PostServiceImpl(PostRepository postRepository, PostQuerydslService postQuerydslService, UserRepository userRepository, PostValidator postValidator) {
+    public PostServiceImpl(PostRepository postRepository, PostLikeRepository postLikeRepository, PostQuerydslService postQuerydslService, UserRepository userRepository, PostValidator postValidator, CacheManager cacheManager) {
         this.postRepository = postRepository;
+        this.postLikeRepository = postLikeRepository;
         this.postQuerydslService = postQuerydslService;
         this.userRepository = userRepository;
         this.postValidator = postValidator;
+        this.cacheManager = cacheManager;
+    }
+
+    // 캐시 hit 시 캐시 값 반환, miss 시 post_like 테이블 COUNT로 복원 후 캐시에 올림 (read-through)
+    private int getCachedLikeCount(Long postId) {
+        Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
+        Cache.ValueWrapper wrapper = cache.get(postId);
+        if (wrapper != null) {
+            return (int) wrapper.get();
+        }
+        int count = (int) postLikeRepository.countById_PostId(postId);
+        cache.put(postId, count);
+        return count;
     }
 
     @Override
@@ -74,7 +98,7 @@ public class PostServiceImpl implements PostService {
                         post.getTitle(),
                         post.getUser().getNickname(),
                         post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
-                        0,  // TODO: PostLike 집계 후 대체
+                        getCachedLikeCount(post.getId()),
                         post.getCommentCount(),
                         0   // TODO: PostViewCount 집계 후 대체
                 ))
@@ -96,6 +120,8 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
+        boolean isLiked = postLikeRepository.existsById(new PostLikeId(postId, userId));
+
         return new GetPostResponse(
                 post.getId(),
                 post.getUser().getId(),
@@ -105,9 +131,9 @@ public class PostServiceImpl implements PostService {
                 post.getUser().getNickname(),
                 post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
                 0,  // TODO: PostViewCount 집계 후 대체
-                0,  // TODO: PostLike 집계 후 대체
+                getCachedLikeCount(postId),
                 post.getCommentCount(),
-                false
+                isLiked
         );
     }
 
@@ -148,5 +174,69 @@ public class PostServiceImpl implements PostService {
                 post.getContent(),
                 post.getImageUrl()
         );
+    }
+
+    @Override
+    @Transactional
+    public PostLikeResponse likePost(Long postId, PostLikeRequest request) {
+        // 존재하는 게시글인지 확인
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
+
+        // 존재하는 사용자인지 확인
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        // 이미 게시글 좋아요를 수행했는지 확인
+        PostLikeId likeId = new PostLikeId(postId, request.userId());
+        if (postLikeRepository.existsById(likeId)) {
+            throw new ApiException(ErrorCode.POST_ALREADY_LIKED);
+        }
+
+        postLikeRepository.save(PostLike.of(post, user));
+
+        // 게시글 좋아요 수 캐시 확인
+        Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
+        Cache.ValueWrapper wrapper = cache.get(postId);
+
+        // 캐시가 이미 존재하면 해당 값에서 +1, 없으면 DB에 저장된 값을 가져옴
+        int newCount = wrapper != null
+                ? (int) wrapper.get() + 1
+                : (int) postLikeRepository.countById_PostId(postId);
+
+        // 캐시값 업데이트
+        cache.put(postId, newCount);
+
+        return new PostLikeResponse(post.getId(), newCount);
+    }
+
+    @Override
+    @Transactional
+    public PostLikeResponse unlikePost(Long postId, Long userId) {
+        // 존재하는 게시글인지 확인
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
+
+        // 존재하는 유저인지 확인
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        // 취소할 좋아요가 있는지 확인
+        PostLikeId likeId = new PostLikeId(postId, userId);
+        if (!postLikeRepository.existsById(likeId)) {
+            throw new ApiException(ErrorCode.POST_LIKE_NOT_FOUND);
+        }
+
+        postLikeRepository.deleteById(likeId);
+
+        // 캐시가 이미 존재하면 해당 값에서 -1, 없으면 DB에 저장된 값을 가져옴
+        Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
+        Cache.ValueWrapper wrapper = cache.get(postId);
+        int newCount = wrapper != null
+                ? Math.max(0, (int) wrapper.get() - 1)
+                : (int) postLikeRepository.countById_PostId(postId);
+        cache.put(postId, newCount);
+
+        return new PostLikeResponse(post.getId(), newCount);
     }
 }
