@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record SignUpResponse(
         @JsonProperty("user_id")
-        Long userId
+        Long userId,
+        String email,
+        String nickname,
+        @JsonProperty("profile_image")
+        String profileImage
 ) {
 }
