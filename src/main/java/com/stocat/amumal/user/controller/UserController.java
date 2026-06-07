@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -61,7 +62,7 @@ public class UserController {
         return ApiResponse.of("수정 완료", userService.updateProfile(userId, request));
     }
 
-    @PatchMapping("/{user_id}/password")
+    @PutMapping("/{user_id}/password")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Void> updatePassword(
             @PathVariable("user_id") Long userId,
