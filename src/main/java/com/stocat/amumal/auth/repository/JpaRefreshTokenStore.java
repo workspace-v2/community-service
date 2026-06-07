@@ -4,11 +4,9 @@ import com.stocat.amumal.auth.domain.RefreshToken;
 import com.stocat.amumal.auth.domain.RefreshTokenEntry;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
-import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 
-@Component
+@Deprecated
 public class JpaRefreshTokenStore implements RefreshTokenStore {
 
     private final RefreshTokenRepository refreshTokenRepository;
