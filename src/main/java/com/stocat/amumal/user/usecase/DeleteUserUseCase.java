@@ -19,7 +19,7 @@ public class DeleteUserUseCase {
         userService.validateUserExists(userId);
 
         // TODO: 댓글 삭제
-        postRepository.deleteAllByUserId(userId);
+        postRepository.deleteAllByUser_Id(userId);
         userService.deleteUser(userId);
     }
 }
