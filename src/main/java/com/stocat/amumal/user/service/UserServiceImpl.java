@@ -47,7 +47,12 @@ public class UserServiceImpl implements UserService {
                 request.profileImage().trim()
         ));
 
-        return new SignUpResponse(savedUser.getId());
+        return new SignUpResponse(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getNickname(),
+                savedUser.getProfileImageUrl()
+        );
     }
 
     @Override
