@@ -1,4 +1,4 @@
-package com.stocat.amumal.user.dto;
+package com.stocat.amumal.auth.dto;
 
 public record LoginRequest(
         String email,
