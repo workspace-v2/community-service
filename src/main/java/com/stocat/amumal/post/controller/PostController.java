@@ -5,6 +5,8 @@ import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.GetPostsResponse;
+import com.stocat.amumal.post.dto.PostLikeRequest;
+import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
 import com.stocat.amumal.post.service.PostService;
@@ -74,5 +76,23 @@ public class PostController {
             @Valid @RequestBody UpdatePostRequest request
     ) {
         return ApiResponse.of("게시글이 수정되었습니다.", postService.updatePost(postId, request));
+    }
+
+    @PostMapping("/{post_id}/likes")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<PostLikeResponse> likePost(
+            @PathVariable("post_id") Long postId,
+            @RequestBody PostLikeRequest request
+    ) {
+        return ApiResponse.of("좋아요가 등록되었습니다.", postService.likePost(postId, request));
+    }
+
+    @DeleteMapping("/{post_id}/likes")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<PostLikeResponse> unlikePost(
+            @PathVariable("post_id") Long postId,
+            @RequestParam("user_id") Long userId
+    ) {
+        return ApiResponse.of("좋아요가 취소되었습니다.", postService.unlikePost(postId, userId));
     }
 }
