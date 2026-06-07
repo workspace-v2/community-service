@@ -14,6 +14,7 @@ import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.validator.UserValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -27,6 +28,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
         validateSignUp(request);
 
@@ -38,12 +40,12 @@ public class UserServiceImpl implements UserService {
             throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
-        User savedUser = userRepository.save(
+        User savedUser = userRepository.save(User.of(
                 request.email().trim(),
                 request.password(),
                 request.nickname().trim(),
                 request.profileImage().trim()
-        );
+        ));
 
         return new SignUpResponse(savedUser.getId());
     }
@@ -71,11 +73,12 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
-                user.getProfileImage()
+                user.getProfileImageUrl()
         );
     }
 
     @Override
+    @Transactional
     public UpdateProfileResponse updateProfile(Long userId, UpdateProfileRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
@@ -83,25 +86,26 @@ public class UserServiceImpl implements UserService {
         validateProfileUpdate(request, user);
 
         String nickname = request.nickname() == null ? user.getNickname() : request.nickname().trim();
-        String profileImage = request.profileImage() == null ? user.getProfileImage() : request.profileImage().trim();
+        String profileImageUrl = request.profileImage() == null ? user.getProfileImageUrl() : request.profileImage().trim();
 
-        User updatedUser = userRepository.updateProfile(userId, nickname, profileImage);
+        user.updateProfile(nickname, profileImageUrl);
 
         return new UpdateProfileResponse(
-                updatedUser.getId(),
-                updatedUser.getNickname(),
-                updatedUser.getProfileImage()
+                user.getId(),
+                user.getNickname(),
+                user.getProfileImageUrl()
         );
     }
 
     @Override
+    @Transactional
     public void updatePassword(Long userId, UpdatePasswordRequest request) {
-        userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         validatePasswordUpdate(request);
 
-        userRepository.updatePassword(userId, request.password());
+        user.updatePassword(request.password());
     }
 
     @Override
@@ -111,6 +115,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
     }
