@@ -1,8 +1,6 @@
 package com.stocat.amumal.user.controller;
 
 import com.stocat.amumal.common.response.ApiResponse;
-import com.stocat.amumal.user.dto.LoginRequest;
-import com.stocat.amumal.user.dto.LoginResponse;
 import com.stocat.amumal.user.dto.SignUpRequest;
 import com.stocat.amumal.user.dto.SignUpResponse;
 import com.stocat.amumal.user.dto.UpdatePasswordRequest;
@@ -42,12 +40,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
         return ApiResponse.of("회원가입이 완료되었습니다.", userService.signUp(request));
-    }
-
-    @PostMapping("/login")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
-        return ApiResponse.of("로그인이 완료되었습니다.", userService.login(request));
     }
 
     @GetMapping("/{user_id}")

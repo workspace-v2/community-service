@@ -3,8 +3,6 @@ package com.stocat.amumal.user.service;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.user.domain.User;
-import com.stocat.amumal.user.dto.LoginRequest;
-import com.stocat.amumal.user.dto.LoginResponse;
 import com.stocat.amumal.user.dto.SignUpRequest;
 import com.stocat.amumal.user.dto.SignUpResponse;
 import com.stocat.amumal.user.dto.UpdatePasswordRequest;
@@ -56,20 +54,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginResponse login(LoginRequest request) {
-        validateLogin(request);
-
-        User user = userRepository.findByEmail(request.email().trim())
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
-
-        if (!user.getPassword().equals(request.password())) {
-            throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
-        }
-
-        return new LoginResponse(user.getId());
-    }
-
-    @Override
     public UserResponse getUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
@@ -91,7 +75,8 @@ public class UserServiceImpl implements UserService {
         validateProfileUpdate(request, user);
 
         String nickname = request.nickname() == null ? user.getNickname() : request.nickname().trim();
-        String profileImageUrl = request.profileImage() == null ? user.getProfileImageUrl() : request.profileImage().trim();
+        String profileImageUrl =
+                request.profileImage() == null ? user.getProfileImageUrl() : request.profileImage().trim();
 
         user.updateProfile(nickname, profileImageUrl);
 
@@ -131,11 +116,6 @@ public class UserServiceImpl implements UserService {
         userValidator.validatePasswordConfirm(request.password(), request.passwordConfirm());
         userValidator.validateNickname(request.nickname());
         userValidator.validateRequiredProfileImage(request.profileImage());
-    }
-
-    private void validateLogin(LoginRequest request) {
-        userValidator.validateEmail(request.email());
-        userValidator.validatePassword(request.password());
     }
 
     private void validateProfileUpdate(UpdateProfileRequest request, User user) {
