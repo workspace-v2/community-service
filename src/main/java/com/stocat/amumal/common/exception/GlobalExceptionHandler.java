@@ -1,6 +1,8 @@
 package com.stocat.amumal.common.exception;
 
 import com.stocat.amumal.common.response.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,6 +16,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException exception) {
         return ResponseEntity.status(exception.getStatus())
                 .body(ApiResponse.of(exception.getMessage(), null));
+    }
+
+    // 경로 변수 등 제약 조건 위반 처리 (400)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.of("올바르지 않은 요청입니다.", null));
     }
 
     // 예상치 못한 예외 처리 (500)
