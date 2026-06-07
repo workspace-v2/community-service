@@ -42,6 +42,9 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = false)
     private int commentCount = 0;
 
+    @Column(nullable = false)
+    private int viewCount = 0;
+
     public static Post of(User user, String title, String content, String imageUrl) {
         Post post = new Post();
         post.user = user;
