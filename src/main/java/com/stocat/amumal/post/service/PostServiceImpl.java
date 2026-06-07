@@ -23,11 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final PostQuerydslService postQuerydslService;
     private final UserRepository userRepository;
     private final PostValidator postValidator;
 
-    public PostServiceImpl(PostRepository postRepository, UserRepository userRepository, PostValidator postValidator) {
+    public PostServiceImpl(PostRepository postRepository, PostQuerydslService postQuerydslService, UserRepository userRepository, PostValidator postValidator) {
         this.postRepository = postRepository;
+        this.postQuerydslService = postQuerydslService;
         this.userRepository = userRepository;
         this.postValidator = postValidator;
     }
@@ -62,8 +64,7 @@ public class PostServiceImpl implements PostService {
         postValidator.validateListSize(size);
 
         // 다음 페이지 존재 여부를 확인하기 위해 요청 개수보다 1개 더 조회
-        // List<Post> posts = postRepository.findAllByCursor(cursor, PageRequest.of(0, size + 1));
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc(); // TODO: 삭제
+        List<Post> posts = postQuerydslService.findAllByCursor(cursor, size + 1);
         boolean hasNext = posts.size() > size;
         List<Post> pagePosts = hasNext ? posts.subList(0, size) : posts;
 
