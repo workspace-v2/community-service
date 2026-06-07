@@ -11,7 +11,6 @@ import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.GetPostsResponse;
-import com.stocat.amumal.post.dto.PostLikeRequest;
 import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
@@ -76,10 +75,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public CreatePostResponse createPost(CreatePostRequest request) {
+    public CreatePostResponse createPost(Long userId, CreatePostRequest request) {
         postValidator.validateCreatePost(request);
 
-        User user = userRepository.findById(request.userId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         Post savedPost = postRepository.save(Post.of(
@@ -170,13 +169,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request) {
+    public UpdatePostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
         postValidator.validateUpdatePost(request);
 
-        if (!post.getUser().getId().equals(request.userId())) {
+        if (!post.getUser().getId().equals(userId)) {
             throw new ApiException(ErrorCode.POST_UPDATE_FORBIDDEN);
         }
 
@@ -196,17 +195,17 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostLikeResponse likePost(Long postId, PostLikeRequest request) {
+    public PostLikeResponse likePost(Long postId, Long userId) {
         // 존재하는 게시글인지 확인
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
         // 존재하는 사용자인지 확인
-        User user = userRepository.findById(request.userId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         // 이미 게시글 좋아요를 수행했는지 확인
-        PostLikeId likeId = new PostLikeId(postId, request.userId());
+        PostLikeId likeId = new PostLikeId(postId, userId);
         if (postLikeRepository.existsById(likeId)) {
             throw new ApiException(ErrorCode.POST_ALREADY_LIKED);
         }

@@ -1,11 +1,11 @@
 package com.stocat.amumal.post.controller;
 
+import com.stocat.amumal.auth.annotation.AuthUserId;
 import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.GetPostsResponse;
-import com.stocat.amumal.post.dto.PostLikeRequest;
 import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
@@ -38,15 +38,18 @@ public class PostController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<CreatePostResponse> createPost(@Valid @RequestBody CreatePostRequest request) {
-        return ApiResponse.of("게시글이 생성되었습니다.", postService.createPost(request));
+    public ApiResponse<CreatePostResponse> createPost(
+            @AuthUserId Long userId,
+            @Valid @RequestBody CreatePostRequest request
+    ) {
+        return ApiResponse.of("게시글이 생성되었습니다.", postService.createPost(userId, request));
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<GetPostsResponse> getPosts(
-            @Positive @RequestParam(value = "cursor", required = false) Long cursor, // 필수가 아님
-            @Positive @RequestParam(value = "size", defaultValue = "10") int size // 기본값 10
+            @Positive @RequestParam(value = "cursor", required = false) Long cursor,
+            @Positive @RequestParam(value = "size", defaultValue = "10") int size
     ) {
         return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPosts(cursor, size));
     }
@@ -55,7 +58,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<GetPostResponse> getPost(
             @Positive @PathVariable("post_id") Long postId,
-            @Positive @RequestParam("user_id") Long userId
+            @AuthUserId Long userId
     ) {
         return ApiResponse.of("게시글 조회에 성공했습니다.", postService.getPost(postId, userId));
     }
@@ -64,7 +67,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePost(
             @Positive @PathVariable("post_id") Long postId,
-            @Positive @RequestParam("user_id") Long userId
+            @AuthUserId Long userId
     ) {
         postService.deletePost(postId, userId);
     }
@@ -73,25 +76,26 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<UpdatePostResponse> updatePost(
             @Positive @PathVariable("post_id") Long postId,
+            @AuthUserId Long userId,
             @Valid @RequestBody UpdatePostRequest request
     ) {
-        return ApiResponse.of("게시글이 수정되었습니다.", postService.updatePost(postId, request));
+        return ApiResponse.of("게시글이 수정되었습니다.", postService.updatePost(postId, userId, request));
     }
 
     @PostMapping("/{post_id}/likes")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<PostLikeResponse> likePost(
-            @PathVariable("post_id") Long postId,
-            @RequestBody PostLikeRequest request
+            @Positive @PathVariable("post_id") Long postId,
+            @AuthUserId Long userId
     ) {
-        return ApiResponse.of("좋아요가 등록되었습니다.", postService.likePost(postId, request));
+        return ApiResponse.of("좋아요가 등록되었습니다.", postService.likePost(postId, userId));
     }
 
     @DeleteMapping("/{post_id}/likes")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<PostLikeResponse> unlikePost(
-            @PathVariable("post_id") Long postId,
-            @RequestParam("user_id") Long userId
+            @Positive @PathVariable("post_id") Long postId,
+            @AuthUserId Long userId
     ) {
         return ApiResponse.of("좋아요가 취소되었습니다.", postService.unlikePost(postId, userId));
     }
