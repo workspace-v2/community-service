@@ -16,4 +16,6 @@ public interface PostService {
     GetPostResponse getPost(Long postId, Long userId);
 
     UpdatePostResponse updatePost(Long postId, UpdatePostRequest request);
+
+    void deletePost(Long postId, Long userId);
 }
