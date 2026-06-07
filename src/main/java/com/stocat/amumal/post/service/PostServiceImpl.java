@@ -46,6 +46,22 @@ public class PostServiceImpl implements PostService {
         this.cacheManager = cacheManager;
     }
 
+    // 캐시에 누적된 delta와 DB 저장값을 합산해 반환
+    private int getViewCount(Post post) {
+        Cache cache = cacheManager.getCache(CacheConfig.CACHE_VIEW_COUNT);
+        Cache.ValueWrapper wrapper = cache.get(post.getId());
+        int delta = wrapper != null ? (int) wrapper.get() : 0;
+        return post.getViewCount() + delta;
+    }
+
+    // 캐시에 delta +1 누적
+    private void incrementViewCountCache(Long postId) {
+        Cache cache = cacheManager.getCache(CacheConfig.CACHE_VIEW_COUNT);
+        Cache.ValueWrapper wrapper = cache.get(postId);
+        int current = wrapper != null ? (int) wrapper.get() : 0;
+        cache.put(postId, current + 1);
+    }
+
     // 캐시 hit 시 캐시 값 반환, miss 시 post_like 테이블 COUNT로 복원 후 캐시에 올림 (read-through)
     private int getCachedLikeCount(Long postId) {
         Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
@@ -100,7 +116,7 @@ public class PostServiceImpl implements PostService {
                         post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
                         getCachedLikeCount(post.getId()),
                         post.getCommentCount(),
-                        0   // TODO: PostViewCount 집계 후 대체
+                        getViewCount(post)
                 ))
                 .toList();
 
@@ -120,6 +136,8 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
+        incrementViewCountCache(postId);
+
         boolean isLiked = postLikeRepository.existsById(new PostLikeId(postId, userId));
 
         return new GetPostResponse(
@@ -130,7 +148,7 @@ public class PostServiceImpl implements PostService {
                 post.getImageUrl(),
                 post.getUser().getNickname(),
                 post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
-                0,  // TODO: PostViewCount 집계 후 대체
+                getViewCount(post),
                 getCachedLikeCount(postId),
                 post.getCommentCount(),
                 isLiked
