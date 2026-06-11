@@ -1,6 +1,6 @@
 package com.stocat.amumal.post.event;
 
-import com.stocat.amumal.post.service.PostService;
+import com.stocat.amumal.post.service.PostViewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PostViewEventListener {
 
-    private final PostService postService;
+    private final PostViewService postViewService;
 
     @EventListener
     public void handle(PostViewedEvent event) {
-        postService.incrementViewCountCache(event.postId());
+        postViewService.incrementViewCountCache(event.postId());
     }
 }

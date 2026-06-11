@@ -4,7 +4,6 @@ import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.GetPostsResponse;
-import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
 
@@ -19,10 +18,4 @@ public interface PostService {
     UpdatePostResponse updatePost(Long postId, Long userId, UpdatePostRequest request);
 
     void deletePost(Long postId, Long userId);
-
-    PostLikeResponse likePost(Long postId, Long userId);
-
-    PostLikeResponse unlikePost(Long postId, Long userId);
-
-    void incrementViewCountCache(Long postId);
 }
