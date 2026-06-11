@@ -23,4 +23,6 @@ public interface PostService {
     PostLikeResponse likePost(Long postId, Long userId);
 
     PostLikeResponse unlikePost(Long postId, Long userId);
+
+    void incrementViewCountCache(Long postId);
 }

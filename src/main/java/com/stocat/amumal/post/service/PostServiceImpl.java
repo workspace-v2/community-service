@@ -53,14 +53,6 @@ public class PostServiceImpl implements PostService {
         return post.getViewCount() + delta;
     }
 
-    // 캐시에 delta +1 누적
-    private void incrementViewCountCache(Long postId) {
-        Cache cache = cacheManager.getCache(CacheConfig.CACHE_VIEW_COUNT);
-        Cache.ValueWrapper wrapper = cache.get(postId);
-        int current = wrapper != null ? (int) wrapper.get() : 0;
-        cache.put(postId, current + 1);
-    }
-
     // 캐시 hit 시 캐시 값 반환, miss 시 post_like 테이블 COUNT로 복원 후 캐시에 올림 (read-through)
     private int getCachedLikeCount(Long postId) {
         Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
@@ -71,6 +63,14 @@ public class PostServiceImpl implements PostService {
         int count = (int) postLikeRepository.countById_PostId(postId);
         cache.put(postId, count);
         return count;
+    }
+
+    // 캐시에 delta +1 누적
+    public void incrementViewCountCache(Long postId) {
+        Cache cache = cacheManager.getCache(CacheConfig.CACHE_VIEW_COUNT);
+        Cache.ValueWrapper wrapper = cache.get(postId);
+        int current = wrapper != null ? (int) wrapper.get() : 0;
+        cache.put(postId, current + 1);
     }
 
     @Override
