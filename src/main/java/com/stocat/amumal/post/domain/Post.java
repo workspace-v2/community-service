@@ -1,6 +1,6 @@
 package com.stocat.amumal.post.domain;
 
-import com.stocat.amumal.common.entity.BaseTimeEntity;
+import com.stocat.amumal.common.entity.BaseEntity;
 import com.stocat.amumal.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "post")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Post extends BaseTimeEntity {
+public class Post extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
