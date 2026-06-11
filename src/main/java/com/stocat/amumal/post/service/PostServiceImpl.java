@@ -15,17 +15,20 @@ import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
+import com.stocat.amumal.post.event.PostViewEventPublisher;
 import com.stocat.amumal.post.repository.PostLikeRepository;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.validator.PostValidator;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@AllArgsConstructor
 @Service
 public class PostServiceImpl implements PostService {
 
@@ -35,15 +38,7 @@ public class PostServiceImpl implements PostService {
     private final UserRepository userRepository;
     private final PostValidator postValidator;
     private final CacheManager cacheManager;
-
-    public PostServiceImpl(PostRepository postRepository, PostLikeRepository postLikeRepository, PostQuerydslService postQuerydslService, UserRepository userRepository, PostValidator postValidator, CacheManager cacheManager) {
-        this.postRepository = postRepository;
-        this.postLikeRepository = postLikeRepository;
-        this.postQuerydslService = postQuerydslService;
-        this.userRepository = userRepository;
-        this.postValidator = postValidator;
-        this.cacheManager = cacheManager;
-    }
+    private final PostViewEventPublisher postViewEventPublisher;
 
     // 캐시에 누적된 delta와 DB 저장값을 합산해 반환
     private int getViewCount(Post post) {
@@ -135,7 +130,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
-        incrementViewCountCache(postId);
+        postViewEventPublisher.publishEvent(post.getId());
 
         boolean isLiked = postLikeRepository.existsById(new PostLikeId(postId, userId));
 
