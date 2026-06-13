@@ -1,5 +1,6 @@
 package com.stocat.amumal.post.domain;
 
+import com.stocat.amumal.common.entity.CreatedEntity;
 import com.stocat.amumal.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -22,7 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class PostLike {
+public class PostLike extends CreatedEntity {
 
     // @EmbeddedId: 복합키 객체를 PK로 사용
     @EmbeddedId
