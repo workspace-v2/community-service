@@ -9,6 +9,7 @@ import com.stocat.amumal.post.dto.GetPostsResponse;
 import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
+import com.stocat.amumal.post.service.PostLikeService;
 import com.stocat.amumal.post.service.PostService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -31,9 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
 
     private final PostService postService;
+    private final PostLikeService postLikeService;
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, PostLikeService postLikeService) {
         this.postService = postService;
+        this.postLikeService = postLikeService;
     }
 
     @PostMapping
@@ -88,7 +91,7 @@ public class PostController {
             @Positive @PathVariable("post_id") Long postId,
             @AuthUserId Long userId
     ) {
-        return ApiResponse.of("좋아요가 등록되었습니다.", postService.likePost(postId, userId));
+        return ApiResponse.of("좋아요가 등록되었습니다.", postLikeService.likePost(postId, userId));
     }
 
     @DeleteMapping("/{post_id}/likes")
@@ -97,6 +100,6 @@ public class PostController {
             @Positive @PathVariable("post_id") Long postId,
             @AuthUserId Long userId
     ) {
-        return ApiResponse.of("좋아요가 취소되었습니다.", postService.unlikePost(postId, userId));
+        return ApiResponse.of("좋아요가 취소되었습니다.", postLikeService.unlikePost(postId, userId));
     }
 }
