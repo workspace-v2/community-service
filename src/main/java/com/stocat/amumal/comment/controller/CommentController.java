@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,5 +46,16 @@ public class CommentController {
     ) {
         return ApiResponse.of("댓글 수정에 성공했습니다.",
                 commentService.updateComment(postId, commentId, userId, request));
+    }
+
+    @DeleteMapping("/{comment_id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> deleteComment(
+            @Positive @PathVariable("post_id") Long postId,
+            @Positive @PathVariable("comment_id") Long commentId,
+            @AuthUserId Long userId
+    ) {
+        commentService.deleteComment(postId, commentId, userId);
+        return ApiResponse.of("댓글 삭제에 성공했습니다.", null);
     }
 }

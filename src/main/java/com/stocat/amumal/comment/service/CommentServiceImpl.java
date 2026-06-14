@@ -82,4 +82,22 @@ public class CommentServiceImpl implements CommentService {
                 )
         );
     }
+
+    @Override
+    @Transactional
+    public void deleteComment(Long postId, Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ApiException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getPost().getId().equals(postId)) {
+            throw new ApiException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new ApiException(ErrorCode.COMMENT_DELETE_FORBIDDEN);
+        }
+
+        comment.getPost().decreaseCommentCount();
+        commentRepository.delete(comment);
+    }
 }
