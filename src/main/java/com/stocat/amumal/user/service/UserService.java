@@ -20,4 +20,8 @@ public interface UserService {
     void validateUserExists(Long userId);
 
     void deleteUser(Long userId);
+
+    void isEmailAvailable(String email);
+
+    void isNicknameAvailable(String nickname);
 }
