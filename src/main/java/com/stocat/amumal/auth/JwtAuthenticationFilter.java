@@ -2,6 +2,7 @@ package com.stocat.amumal.auth;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -11,14 +12,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String[] WHITE_LIST = {
-            "/users",
-            "/auth"
+            "/v1/auth/**" // 인증 없이 접근 가능한 경로
     };
     private final JwtProvider jwtProvider;
 
@@ -34,15 +35,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        // 토큰이 없거나 형식이 틀리면 401
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String token = resolveAccessToken(request);
+        if (token == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
-        String token = authHeader.substring(7);
 
         try {
             // 토큰 서명 + 만료 검증
@@ -61,5 +58,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception exception) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
+
+    private String resolveAccessToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        Cookie cookie = WebUtils.getCookie(request, "accessToken");
+        if (cookie == null || cookie.getValue() == null || cookie.getValue().isBlank()) {
+            return null;
+        }
+
+        return cookie.getValue();
     }
 }

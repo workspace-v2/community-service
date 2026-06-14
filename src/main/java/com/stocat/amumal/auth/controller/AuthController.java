@@ -6,6 +6,9 @@ import com.stocat.amumal.auth.dto.TokenInfo;
 import com.stocat.amumal.auth.dto.TokenResult;
 import com.stocat.amumal.auth.service.AuthService;
 import com.stocat.amumal.common.response.ApiResponse;
+import com.stocat.amumal.user.dto.SignUpRequest;
+import com.stocat.amumal.user.dto.SignUpResponse;
+import com.stocat.amumal.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,12 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
-    @PostMapping("/")
+    @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<LoginResponse> login(
             @RequestBody LoginRequest request,
@@ -35,8 +40,16 @@ public class AuthController {
     ) {
         var result = authService.login(request);
 
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE,
+                buildAccessCookie(result.response().token().accessToken()).toString());
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(result.refreshToken()).toString());
         return ApiResponse.of("로그인이 완료되었습니다.", result.response());
+    }
+
+    @PostMapping("/signup")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
+        return ApiResponse.of("회원가입이 완료되었습니다.", userService.signUp(request));
     }
 
     @PostMapping("/refresh-tokens")
@@ -47,8 +60,19 @@ public class AuthController {
     ) {
         TokenResult result = authService.refreshAccessToken(refreshToken);
 
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, buildAccessCookie(result.token().accessToken()).toString());
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(result.newRefreshToken()).toString());
         return ApiResponse.of("토큰 재발급이 완료되었습니다.", result.token());
+    }
+
+    private ResponseCookie buildAccessCookie(String token) {
+        return ResponseCookie.from("accessToken", token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(5 * 60)
+                .sameSite("Lax")
+                .build();
     }
 
     private ResponseCookie buildRefreshCookie(String token) {
@@ -57,7 +81,7 @@ public class AuthController {
                 .secure(false)
                 .path("/")
                 .maxAge(14 * 24 * 60 * 60)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
     }
 }
