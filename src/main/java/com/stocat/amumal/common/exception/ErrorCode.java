@@ -40,6 +40,7 @@ public enum ErrorCode {
 
     // Post - validation
     INVALID_PAGE_SIZE("INVALID_INPUT", HttpStatus.BAD_REQUEST, "size는 1 이상이어야 합니다."),
+    INVALID_POST_SEARCH_SORT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "지원하지 않는 정렬 방식입니다."),
     MISSING_POST_FIELDS("INVALID_INPUT", HttpStatus.BAD_REQUEST, "제목, 내용을 모두 작성해주세요."),
     EMPTY_POST_TITLE("INVALID_INPUT", HttpStatus.BAD_REQUEST, "제목을 입력해주세요."),
     POST_TITLE_TOO_LONG("INVALID_INPUT", HttpStatus.BAD_REQUEST, "제목은 최대 26자까지 작성 가능합니다."),

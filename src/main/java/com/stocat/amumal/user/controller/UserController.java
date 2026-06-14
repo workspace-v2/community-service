@@ -8,6 +8,7 @@ import com.stocat.amumal.user.dto.UpdateProfileResponse;
 import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.service.UserService;
 import com.stocat.amumal.user.usecase.DeleteUserUseCase;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,21 +17,18 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @Validated
+@AllArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
     private final DeleteUserUseCase deleteUserUseCase;
-
-    public UserController(UserService userService, DeleteUserUseCase deleteUserUseCase) {
-        this.userService = userService;
-        this.deleteUserUseCase = deleteUserUseCase;
-    }
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
@@ -62,5 +60,19 @@ public class UserController {
     public ApiResponse<Void> deleteUser(@AuthUserId Long userId) {
         deleteUserUseCase.execute(userId);
         return ApiResponse.of("회원 탈퇴가 완료되었습니다.", null);
+    }
+
+    @GetMapping("/email/check")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> checkEmail(@RequestParam("email") String email) {
+        userService.isEmailAvailable(email);
+        return ApiResponse.of("사용 가능한 이메일입니다.", null);
+    }
+
+    @GetMapping("/nickname/check")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> checkNickname(@RequestParam("nickname") String nickname) {
+        userService.isNicknameAvailable(nickname);
+        return ApiResponse.of("사용 가능한 닉네임입니다.", null);
     }
 }

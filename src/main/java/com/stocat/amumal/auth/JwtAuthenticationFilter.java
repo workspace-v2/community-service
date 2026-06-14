@@ -17,7 +17,14 @@ import org.springframework.web.util.WebUtils;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String[] WHITE_LIST = {
-            "/v1/auth/**" // 인증 없이 접근 가능한 경로
+            "/v1/auth/login",
+            "/v1/auth/signup",
+            "/v1/auth/refresh-tokens",
+            "/v1/auth/logout",
+            "/v1/users/email/check",
+            "/v1/users/nickname/check",
+            "/v1/users/upload/profile-image",
+            "/v1/posts/upload/attach-file"
     };
     private final JwtProvider jwtProvider;
 

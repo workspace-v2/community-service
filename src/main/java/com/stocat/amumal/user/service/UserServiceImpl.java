@@ -110,6 +110,22 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
+    @Override
+    public void isEmailAvailable(String email) {
+        userValidator.validateEmail(email);
+        if (userRepository.existsByEmail(email)) {
+            throw new ApiException(ErrorCode.DUPLICATE_EMAIL);
+        }
+    }
+
+    @Override
+    public void isNicknameAvailable(String nickname) {
+        userValidator.validateNickname(nickname);
+        if (userRepository.existsByNickname(nickname)) {
+            throw new ApiException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+    }
+
     private void validateSignUp(SignUpRequest request) {
         userValidator.validateEmail(request.email());
         userValidator.validatePassword(request.password());

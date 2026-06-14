@@ -12,6 +12,7 @@ import com.stocat.amumal.auth.repository.RefreshTokenStore;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.user.domain.User;
+import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.validator.UserValidator;
 import java.time.LocalDateTime;
@@ -58,7 +59,8 @@ public class AuthServiceImpl implements AuthService {
         String refreshTokenValue = jwtProvider.createRefreshToken(user.getId());
         refreshTokenStore.deleteByUserId(user.getId());
         refreshTokenStore.save(
-                new RefreshTokenEntry(refreshTokenValue, user.getId(), LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
+                new RefreshTokenEntry(refreshTokenValue, user.getId(),
+                        LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
 
         // 응답 바디(LoginResponse)와 쿠키용 리프레시 토큰을 분리해 반환
         long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
@@ -93,10 +95,33 @@ public class AuthServiceImpl implements AuthService {
         String newRefreshTokenValue = jwtProvider.createRefreshToken(user.getId());
         refreshTokenStore.delete(refreshToken);
         refreshTokenStore.save(
-                new RefreshTokenEntry(newRefreshTokenValue, user.getId(), LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
+                new RefreshTokenEntry(newRefreshTokenValue, user.getId(),
+                        LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
 
         // 새 액세스 토큰(응답 바디)과 새 리프레시 토큰(쿠키 교체용)을 분리해 반환
         long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
         return new TokenResult(new TokenInfo(newAccessToken, expiresIn), newRefreshTokenValue);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getAuthenticatedUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getProfileImageUrl()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenStore.delete(refreshToken);
+        }
     }
 }

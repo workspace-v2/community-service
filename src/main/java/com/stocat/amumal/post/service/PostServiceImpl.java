@@ -9,6 +9,7 @@ import com.stocat.amumal.post.domain.PostLikeId;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
+import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
@@ -87,6 +88,16 @@ public class PostServiceImpl implements PostService {
         postValidator.validateListSize(limit);
 
         return postQuerydslService.findAllByOffset(offset, limit).stream()
+                .map(this::toPostSummaryResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> searchPosts(String keyword, int offset, int limit, PostSearchSort sort) {
+        postValidator.validateListSize(limit);
+
+        return postQuerydslService.searchPosts(keyword, offset, limit, sort).stream()
                 .map(this::toPostSummaryResponse)
                 .toList();
     }
