@@ -59,4 +59,8 @@ public class Post extends BaseEntity {
         this.content = content;
         this.imageUrl = imageUrl;
     }
+
+    public void increaseCommentCount() {
+        this.commentCount += 1;
+    }
 }

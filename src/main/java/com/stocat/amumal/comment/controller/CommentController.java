@@ -1,0 +1,36 @@
+package com.stocat.amumal.comment.controller;
+
+import com.stocat.amumal.auth.annotation.AuthUserId;
+import com.stocat.amumal.comment.dto.CommentRequest;
+import com.stocat.amumal.comment.dto.CommentResponse;
+import com.stocat.amumal.comment.service.CommentService;
+import com.stocat.amumal.common.response.ApiResponse;
+import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+@Validated
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/posts/{post_id}/comments")
+public class CommentController {
+
+    private final CommentService commentService;
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<CommentResponse> createComment(
+            @Positive @PathVariable("post_id") Long postId,
+            @AuthUserId Long userId,
+            @RequestBody CommentRequest request
+    ) {
+        return ApiResponse.of("댓글 등록에 성공했습니다.", commentService.createComment(postId, userId, request));
+    }
+}
