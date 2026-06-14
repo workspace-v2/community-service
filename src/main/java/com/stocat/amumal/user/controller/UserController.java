@@ -1,22 +1,18 @@
 package com.stocat.amumal.user.controller;
 
+import com.stocat.amumal.auth.annotation.AuthUserId;
 import com.stocat.amumal.common.response.ApiResponse;
-import com.stocat.amumal.user.dto.SignUpRequest;
-import com.stocat.amumal.user.dto.SignUpResponse;
 import com.stocat.amumal.user.dto.UpdatePasswordRequest;
 import com.stocat.amumal.user.dto.UpdateProfileRequest;
 import com.stocat.amumal.user.dto.UpdateProfileResponse;
 import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.service.UserService;
 import com.stocat.amumal.user.usecase.DeleteUserUseCase;
-import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,40 +32,35 @@ public class UserController {
         this.deleteUserUseCase = deleteUserUseCase;
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
-        return ApiResponse.of("회원가입이 완료되었습니다.", userService.signUp(request));
-    }
-
-    @GetMapping("/{user_id}")
+    @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<UserResponse> getUser(@Positive @PathVariable("user_id") Long userId) {
+    public ApiResponse<UserResponse> getUser(@AuthUserId Long userId) {
         return ApiResponse.of("회원정보 조회에 성공했습니다.", userService.getUser(userId));
     }
 
-    @PatchMapping("/{user_id}/profile")
-    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/me")
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<UpdateProfileResponse> updateProfile(
-            @Positive @PathVariable("user_id") Long userId,
+            @AuthUserId Long userId,
             @RequestBody UpdateProfileRequest request
     ) {
         return ApiResponse.of("수정 완료", userService.updateProfile(userId, request));
     }
 
-    @PutMapping("/{user_id}/password")
-    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping("/me/password")
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<Void> updatePassword(
-            @Positive @PathVariable("user_id") Long userId,
+            @AuthUserId Long userId,
             @RequestBody UpdatePasswordRequest request
     ) {
         userService.updatePassword(userId, request);
         return ApiResponse.of("수정 완료", null);
     }
 
-    @DeleteMapping("/{user_id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@Positive @PathVariable("user_id") Long userId) {
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> deleteUser(@AuthUserId Long userId) {
         deleteUserUseCase.execute(userId);
+        return ApiResponse.of("회원 탈퇴가 완료되었습니다.", null);
     }
 }

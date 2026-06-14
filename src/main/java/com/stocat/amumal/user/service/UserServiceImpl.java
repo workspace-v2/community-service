@@ -113,9 +113,13 @@ public class UserServiceImpl implements UserService {
     private void validateSignUp(SignUpRequest request) {
         userValidator.validateEmail(request.email());
         userValidator.validatePassword(request.password());
-        userValidator.validatePasswordConfirm(request.password(), request.passwordConfirm());
         userValidator.validateNickname(request.nickname());
-        userValidator.validateRequiredProfileImage(request.profileImage());
+        if (request.passwordConfirm() != null && !request.passwordConfirm().isBlank()) {
+            userValidator.validatePasswordConfirm(request.password(), request.passwordConfirm());
+        }
+        if (request.profileImage() != null) {
+            userValidator.validateOptionalProfileImage(request.profileImage());
+        }
     }
 
     private void validateProfileUpdate(UpdateProfileRequest request, User user) {
@@ -142,6 +146,8 @@ public class UserServiceImpl implements UserService {
 
     private void validatePasswordUpdate(UpdatePasswordRequest request) {
         userValidator.validatePassword(request.password());
-        userValidator.validatePasswordUpdateConfirm(request.password(), request.passwordConfirm());
+        if (request.passwordConfirm() != null && !request.passwordConfirm().isBlank()) {
+            userValidator.validatePasswordUpdateConfirm(request.password(), request.passwordConfirm());
+        }
     }
 }

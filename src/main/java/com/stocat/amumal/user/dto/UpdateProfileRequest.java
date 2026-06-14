@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record UpdateProfileRequest(
         String nickname,
-        @JsonProperty("profile_image")
+        @JsonProperty("profileImageUrl")
         String profileImage
 ) {
 }
