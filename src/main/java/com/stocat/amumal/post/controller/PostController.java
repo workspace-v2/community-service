@@ -5,6 +5,7 @@ import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
+import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
@@ -56,6 +57,19 @@ public class PostController {
             @Positive @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
         return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPosts(offset, limit));
+    }
+
+    @GetMapping("/search")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<PostSummaryResponse>> searchPosts(
+            @RequestParam("keyword") String keyword,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @Positive @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(value = "sort", defaultValue = "recent") String sort
+    ) {
+        PostSearchSort searchSort = PostSearchSort.from(sort);
+        return ApiResponse.of("게시글 검색에 성공했습니다.",
+                postService.searchPosts(keyword, offset, limit, searchSort));
     }
 
     @GetMapping("/{post_id}")
