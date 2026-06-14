@@ -4,6 +4,7 @@ import com.stocat.amumal.auth.AuthCookieFactory;
 import com.stocat.amumal.auth.annotation.AuthUserId;
 import com.stocat.amumal.auth.dto.AuthCheckResponse;
 import com.stocat.amumal.auth.dto.LoginRequest;
+import com.stocat.amumal.auth.dto.LoginResult;
 import com.stocat.amumal.auth.dto.LoginResponse;
 import com.stocat.amumal.auth.dto.TokenInfo;
 import com.stocat.amumal.auth.dto.TokenResult;
@@ -11,6 +12,7 @@ import com.stocat.amumal.auth.service.AuthService;
 import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.user.dto.SignUpRequest;
 import com.stocat.amumal.user.dto.SignUpResponse;
+import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -39,7 +41,7 @@ public class AuthController {
             @RequestBody LoginRequest request,
             HttpServletResponse httpResponse
     ) {
-        var result = authService.login(request);
+        LoginResult result = authService.login(request);
 
         httpResponse.addHeader(HttpHeaders.SET_COOKIE,
                 authCookieFactory.createAccessTokenCookie(result.response().token().accessToken()).toString());
@@ -57,7 +59,7 @@ public class AuthController {
     @GetMapping("/check")
     @ResponseStatus(HttpStatus.OK)
     public AuthCheckResponse check(@AuthUserId Long userId) {
-        var user = authService.getAuthenticatedUser(userId);
+        UserResponse user = authService.getAuthenticatedUser(userId);
         return new AuthCheckResponse(null, "인증에 성공했습니다.", user, user.userId());
     }
 
