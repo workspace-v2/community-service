@@ -18,6 +18,7 @@ public class PostQuerydslService {
     private final JPAQueryFactory queryFactory;
 
     // cursor 기반 페이지네이션
+    @Deprecated
     public List<Post> findAllByCursor(Long cursor, int size) {
         return queryFactory
                 .selectFrom(post)
@@ -40,14 +41,5 @@ public class PostQuerydslService {
     // 다양한 조건 조합 가능: null을 반환하면 where()가 해당 조건을 무시
     private BooleanExpression cursorLt(Long cursor) {
         return cursor != null ? post.id.lt(cursor) : null;
-    }
-
-    @Transactional
-    public void incrementViewCount(Long postId, int delta) {
-        queryFactory
-                .update(post)
-                .set(post.viewCount, post.viewCount.add(delta))
-                .where(post.id.eq(postId))
-                .execute();
     }
 }
