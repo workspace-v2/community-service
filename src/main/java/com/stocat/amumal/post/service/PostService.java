@@ -3,15 +3,16 @@ package com.stocat.amumal.post.service;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
-import com.stocat.amumal.post.dto.GetPostsResponse;
+import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
+import java.util.List;
 
 public interface PostService {
 
     CreatePostResponse createPost(Long userId, CreatePostRequest request);
 
-    GetPostsResponse getPosts(Long cursor, int size);
+    List<PostSummaryResponse> getPosts(int offset, int limit);
 
     GetPostResponse getPost(Long postId, Long userId);
 
