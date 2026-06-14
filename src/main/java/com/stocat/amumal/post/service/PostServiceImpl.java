@@ -9,7 +9,6 @@ import com.stocat.amumal.post.domain.PostLikeId;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
-import com.stocat.amumal.post.dto.GetPostsResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
@@ -84,31 +83,12 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public GetPostsResponse getPosts(Long cursor, int size) {
-        postValidator.validateListSize(size);
+    public List<PostSummaryResponse> getPosts(int offset, int limit) {
+        postValidator.validateListSize(limit);
 
-        // 다음 페이지 존재 여부를 확인하기 위해 요청 개수보다 1개 더 조회
-        List<Post> posts = postQuerydslService.findAllByCursor(cursor, size + 1);
-        boolean hasNext = posts.size() > size;
-        List<Post> pagePosts = hasNext ? posts.subList(0, size) : posts;
-
-        List<PostSummaryResponse> postResponses = pagePosts.stream()
-                .map(post -> new PostSummaryResponse(
-                        post.getId(),
-                        post.getTitle(),
-                        post.getUser().getNickname(),
-                        post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
-                        getCachedLikeCount(post.getId()),
-                        post.getCommentCount(),
-                        getViewCount(post)
-                ))
+        return postQuerydslService.findAllByOffset(offset, limit).stream()
+                .map(this::toPostSummaryResponse)
                 .toList();
-
-        Long nextCursor = hasNext && !pagePosts.isEmpty()
-                ? pagePosts.get(pagePosts.size() - 1).getId()
-                : null;
-
-        return new GetPostsResponse(postResponses, hasNext, nextCursor);
     }
 
     @Override
@@ -127,15 +107,17 @@ public class PostServiceImpl implements PostService {
         return new GetPostResponse(
                 post.getId(),
                 post.getUser().getId(),
+                post.getUser().getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.getImageUrl(),
                 post.getUser().getNickname(),
+                post.getUser().getProfileImageUrl(),
                 post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
                 getViewCount(post),
                 getCachedLikeCount(postId),
                 post.getCommentCount(),
-                isLiked
+                isLiked,
+                post.getImageUrl()
         );
     }
 
@@ -175,6 +157,22 @@ public class PostServiceImpl implements PostService {
                 post.getTitle(),
                 post.getContent(),
                 post.getImageUrl()
+        );
+    }
+
+    private PostSummaryResponse toPostSummaryResponse(Post post) {
+        return new PostSummaryResponse(
+                post.getId(),
+                post.getTitle(),
+                post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
+                getCachedLikeCount(post.getId()),
+                post.getCommentCount(),
+                getViewCount(post),
+                new PostSummaryResponse.AuthorResponse(
+                        post.getUser().getId(),
+                        post.getUser().getNickname(),
+                        post.getUser().getProfileImageUrl()
+                )
         );
     }
 }

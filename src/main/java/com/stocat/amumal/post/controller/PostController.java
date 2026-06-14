@@ -5,8 +5,8 @@ import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
-import com.stocat.amumal.post.dto.GetPostsResponse;
 import com.stocat.amumal.post.dto.PostLikeResponse;
+import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.dto.UpdatePostRequest;
 import com.stocat.amumal.post.dto.UpdatePostResponse;
 import com.stocat.amumal.post.service.PostLikeService;
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @Validated
 @RestController
@@ -50,11 +51,11 @@ public class PostController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<GetPostsResponse> getPosts(
-            @Positive @RequestParam(value = "cursor", required = false) Long cursor,
-            @Positive @RequestParam(value = "size", defaultValue = "10") int size
+    public ApiResponse<List<PostSummaryResponse>> getPosts(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @Positive @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
-        return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPosts(cursor, size));
+        return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPosts(offset, limit));
     }
 
     @GetMapping("/{post_id}")
