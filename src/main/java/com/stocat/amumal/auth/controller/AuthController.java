@@ -20,17 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
-
-    public AuthController(AuthService authService, UserService userService) {
-        this.authService = authService;
-        this.userService = userService;
-    }
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -50,6 +46,13 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
         return ApiResponse.of("회원가입이 완료되었습니다.", userService.signUp(request));
+    }
+
+    @GetMapping("/check")
+    @ResponseStatus(HttpStatus.OK)
+    public AuthCheckResponse check(@AuthUserId Long userId) {
+        UserResponse user = authService.getAuthenticatedUser(userId);
+        return new AuthCheckResponse(null, "인증에 성공했습니다.", user, user.userId());
     }
 
     @PostMapping("/refresh-tokens")
