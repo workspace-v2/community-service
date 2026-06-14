@@ -5,6 +5,7 @@ import com.stocat.amumal.comment.dto.CommentAuthorResponse;
 import com.stocat.amumal.comment.dto.CommentRequest;
 import com.stocat.amumal.comment.dto.CommentResponse;
 import com.stocat.amumal.comment.repository.CommentRepository;
+import com.stocat.amumal.comment.validator.CommentValidator;
 import com.stocat.amumal.common.DateTimeConstants;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
@@ -20,16 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
-    private static final int MAX_COMMENT_LENGTH = 1500;
-
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentValidator commentValidator;
 
     @Override
     @Transactional
     public CommentResponse createComment(Long postId, Long userId, CommentRequest request) {
-        String content = normalizeContent(request.commentContent());
+        String content = commentValidator.normalizeContent(request.commentContent());
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
@@ -50,17 +50,5 @@ public class CommentServiceImpl implements CommentService {
                         savedComment.getUser().getProfileImageUrl()
                 )
         );
-    }
-
-    private String normalizeContent(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            throw new ApiException(ErrorCode.EMPTY_COMMENT_CONTENT);
-        }
-
-        String trimmed = content.trim();
-        if (trimmed.length() > MAX_COMMENT_LENGTH) {
-            throw new ApiException(ErrorCode.COMMENT_CONTENT_TOO_LONG);
-        }
-        return trimmed;
     }
 }
