@@ -13,7 +13,9 @@ import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +52,20 @@ public class CommentServiceImpl implements CommentService {
                         savedComment.getUser().getProfileImageUrl()
                 )
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CommentResponse> getComments(Long postId, int offset, int limit) {
+        postRepository.findById(postId)
+                .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
+
+        commentValidator.validatePagination(offset, limit);
+        PageRequest pageRequest = PageRequest.of(offset / limit, limit);
+
+        return commentRepository.findAllByPost_IdOrderByCreatedAtAsc(postId, pageRequest).stream()
+                .map(this::toCommentResponse)
+                .toList();
     }
 
     @Override
@@ -99,5 +115,19 @@ public class CommentServiceImpl implements CommentService {
 
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
+    }
+
+    private CommentResponse toCommentResponse(Comment comment) {
+        return new CommentResponse(
+                comment.getId(),
+                comment.getPost().getId(),
+                comment.getContent(),
+                comment.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
+                new CommentAuthorResponse(
+                        comment.getUser().getId(),
+                        comment.getUser().getNickname(),
+                        comment.getUser().getProfileImageUrl()
+                )
+        );
     }
 }

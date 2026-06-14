@@ -54,7 +54,8 @@ public enum ErrorCode {
 
     // Comment - validation
     EMPTY_COMMENT_CONTENT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "댓글을 입력해주세요."),
-    COMMENT_CONTENT_TOO_LONG("INVALID_INPUT", HttpStatus.BAD_REQUEST, "댓글은 최대 1500자까지 작성 가능합니다.");
+    COMMENT_CONTENT_TOO_LONG("INVALID_INPUT", HttpStatus.BAD_REQUEST, "댓글은 최대 1500자까지 작성 가능합니다."),
+    INVALID_COMMENT_OFFSET("INVALID_INPUT", HttpStatus.BAD_REQUEST, "offset은 limit의 배수여야 합니다.");
 
     private final String code;
     private final HttpStatus status;
