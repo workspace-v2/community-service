@@ -51,4 +51,35 @@ public class CommentServiceImpl implements CommentService {
                 )
         );
     }
+
+    @Override
+    @Transactional
+    public CommentResponse updateComment(Long postId, Long commentId, Long userId, CommentRequest request) {
+        String content = commentValidator.normalizeContent(request.commentContent());
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ApiException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getPost().getId().equals(postId)) {
+            throw new ApiException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new ApiException(ErrorCode.COMMENT_UPDATE_FORBIDDEN);
+        }
+
+        comment.update(content);
+
+        return new CommentResponse(
+                comment.getId(),
+                comment.getPost().getId(),
+                comment.getContent(),
+                comment.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
+                new CommentAuthorResponse(
+                        comment.getUser().getId(),
+                        comment.getUser().getNickname(),
+                        comment.getUser().getProfileImageUrl()
+                )
+        );
+    }
 }
