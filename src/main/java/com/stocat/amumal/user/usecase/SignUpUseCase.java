@@ -36,7 +36,7 @@ public class SignUpUseCase {
                 request.email().trim(),
                 request.password(),
                 request.nickname().trim(),
-                request.profileImage().trim()
+                request.profileImage() == null ? null : request.profileImage().trim()
         ));
 
         userImageMappingService.replace(savedUser, request.profileImage());
