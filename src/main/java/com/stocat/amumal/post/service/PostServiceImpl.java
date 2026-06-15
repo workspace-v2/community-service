@@ -6,27 +6,22 @@ import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.domain.PostLikeId;
-import com.stocat.amumal.post.dto.CreatePostRequest;
-import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
-import com.stocat.amumal.post.dto.UpdatePostRequest;
-import com.stocat.amumal.post.dto.UpdatePostResponse;
 import com.stocat.amumal.post.event.PostViewEventPublisher;
 import com.stocat.amumal.post.repository.PostLikeRepository;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.validator.PostValidator;
-import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import java.util.List;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class PostServiceImpl implements PostService {
 
@@ -56,30 +51,6 @@ public class PostServiceImpl implements PostService {
         int count = (int) postLikeRepository.countById_PostId(postId);
         cache.put(postId, count);
         return count;
-    }
-
-    @Override
-    @Transactional
-    public CreatePostResponse createPost(Long userId, CreatePostRequest request) {
-        postValidator.validateCreatePost(request);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-
-        Post savedPost = postRepository.save(Post.of(
-                user,
-                request.title().trim(),
-                request.content().trim(),
-                request.image() == null ? null : request.image().trim()
-        ));
-
-        return new CreatePostResponse(
-                savedPost.getId(),
-                savedPost.getUser().getId(),
-                savedPost.getTitle(),
-                savedPost.getContent(),
-                savedPost.getImageUrl()
-        );
     }
 
     @Override
@@ -143,32 +114,6 @@ public class PostServiceImpl implements PostService {
         }
 
         postRepository.delete(post);
-    }
-
-    @Override
-    @Transactional
-    public UpdatePostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
-
-        postValidator.validateUpdatePost(request);
-
-        if (!post.getUser().getId().equals(userId)) {
-            throw new ApiException(ErrorCode.POST_UPDATE_FORBIDDEN);
-        }
-
-        post.update(
-                request.title().trim(),
-                request.content().trim(),
-                request.image() == null ? null : request.image().trim()
-        );
-
-        return new UpdatePostResponse(
-                post.getId(),
-                post.getTitle(),
-                post.getContent(),
-                post.getImageUrl()
-        );
     }
 
     private PostSummaryResponse toPostSummaryResponse(Post post) {

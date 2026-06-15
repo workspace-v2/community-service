@@ -13,9 +13,9 @@ import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.user.dto.SignUpRequest;
 import com.stocat.amumal.user.dto.SignUpResponse;
 import com.stocat.amumal.user.dto.UserResponse;
-import com.stocat.amumal.user.service.UserService;
+import com.stocat.amumal.user.usecase.SignUpUseCase;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -26,13 +26,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
+    private final SignUpUseCase signUpUseCase;
     private final AuthCookieFactory authCookieFactory;
 
     @PostMapping("/login")
@@ -53,7 +53,7 @@ public class AuthController {
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
-        return ApiResponse.of("회원가입이 완료되었습니다.", userService.signUp(request));
+        return ApiResponse.of("회원가입이 완료되었습니다.", signUpUseCase.execute(request));
     }
 
     @GetMapping("/check")

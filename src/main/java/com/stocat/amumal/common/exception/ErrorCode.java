@@ -55,7 +55,12 @@ public enum ErrorCode {
     // Comment - validation
     EMPTY_COMMENT_CONTENT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "댓글을 입력해주세요."),
     COMMENT_CONTENT_TOO_LONG("INVALID_INPUT", HttpStatus.BAD_REQUEST, "댓글은 최대 1500자까지 작성 가능합니다."),
-    INVALID_COMMENT_OFFSET("INVALID_INPUT", HttpStatus.BAD_REQUEST, "offset은 limit의 배수여야 합니다.");
+    INVALID_COMMENT_OFFSET("INVALID_INPUT", HttpStatus.BAD_REQUEST, "offset은 limit의 배수여야 합니다."),
+
+    // Image
+    EMPTY_FILE("INVALID_INPUT", HttpStatus.BAD_REQUEST, "파일을 선택해주세요."),
+    INVALID_IMAGE_FORMAT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 형식입니다. (jpeg, png, gif, webp만 허용)"),
+    FILE_UPLOAD_FAILED("FILE_UPLOAD_FAILED", HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 오류가 발생했습니다.");
 
     private final String code;
     private final HttpStatus status;
