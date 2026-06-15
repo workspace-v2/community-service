@@ -1,7 +1,7 @@
-package com.stocat.amumal.image.domain;
+package com.stocat.amumal.user.domain;
 
 import com.stocat.amumal.common.entity.BaseEntity;
-import com.stocat.amumal.post.domain.Post;
+import com.stocat.amumal.image.domain.Image;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,29 +14,29 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "post_image")
+@Table(name = "user_image")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostImage extends BaseEntity {
+public class UserImage extends BaseEntity {
 
     @EmbeddedId
-    private PostImageId id;
+    private UserImageId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("postId")
-    @JoinColumn(name = "post_id")
-    private Post post;
+    @MapsId("userId")
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("imageId")
     @JoinColumn(name = "image_id")
     private Image image;
 
-    public static PostImage of(Post post, Image image) {
-        PostImage postImage = new PostImage();
-        postImage.id = new PostImageId(post.getId(), image.getId());
-        postImage.post = post;
-        postImage.image = image;
-        return postImage;
+    public static UserImage of(User user, Image image) {
+        UserImage userImage = new UserImage();
+        userImage.id = new UserImageId(user.getId(), image.getId());
+        userImage.user = user;
+        userImage.image = image;
+        return userImage;
     }
 }

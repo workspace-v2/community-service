@@ -1,4 +1,4 @@
-package com.stocat.amumal.image.domain;
+package com.stocat.amumal.post.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
