@@ -4,8 +4,6 @@ import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.image.domain.Image;
 import com.stocat.amumal.image.domain.ImageSubDir;
-import com.stocat.amumal.image.dto.PostFileUploadResponse;
-import com.stocat.amumal.image.dto.ProfileImageUploadResponse;
 import com.stocat.amumal.image.repository.ImageRepository;
 import com.stocat.amumal.image.storage.FileStorage;
 import com.stocat.amumal.image.storage.StoredFileInfo;
@@ -31,19 +29,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public PostFileUploadResponse uploadPostImage(MultipartFile file) {
-        Image image = saveImage(file, ImageSubDir.POST_IMAGES);
-        return new PostFileUploadResponse(image.getFileUrl());
-    }
-
-    @Override
-    @Transactional
-    public ProfileImageUploadResponse uploadProfileImage(MultipartFile file) {
-        Image image = saveImage(file, ImageSubDir.PROFILE_IMAGES);
-        return new ProfileImageUploadResponse(image.getFileUrl());
-    }
-
-    private Image saveImage(MultipartFile file, ImageSubDir subDir) {
+    public Image upload(MultipartFile file, ImageSubDir subDir) {
         if (file == null || file.isEmpty()) {
             throw new ApiException(ErrorCode.EMPTY_FILE);
         }

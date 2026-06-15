@@ -1,10 +1,9 @@
 package com.stocat.amumal.image.service;
 
-import com.stocat.amumal.image.dto.PostFileUploadResponse;
-import com.stocat.amumal.image.dto.ProfileImageUploadResponse;
+import com.stocat.amumal.image.domain.Image;
+import com.stocat.amumal.image.domain.ImageSubDir;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageService {
-    PostFileUploadResponse uploadPostImage(MultipartFile file);
-    ProfileImageUploadResponse uploadProfileImage(MultipartFile file);
+    Image upload(MultipartFile file, ImageSubDir subDir);
 }
