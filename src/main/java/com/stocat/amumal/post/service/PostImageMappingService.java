@@ -6,11 +6,11 @@ import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.domain.PostImage;
 import com.stocat.amumal.post.repository.PostImageRepository;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PostImageMappingService {
 
     private final ImageRepository imageRepository;

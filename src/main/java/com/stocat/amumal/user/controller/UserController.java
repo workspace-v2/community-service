@@ -11,7 +11,7 @@ import com.stocat.amumal.user.service.UserService;
 import com.stocat.amumal.user.usecase.DeleteUserUseCase;
 import com.stocat.amumal.user.usecase.UpdateProfileUseCase;
 import com.stocat.amumal.user.usecase.UploadProfileImageUseCase;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @Validated
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {

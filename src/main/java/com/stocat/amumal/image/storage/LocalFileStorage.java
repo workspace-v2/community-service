@@ -9,17 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
+@RequiredArgsConstructor
 public class LocalFileStorage implements FileStorage {
 
     private final ImageProperties imageProperties;
-
-    public LocalFileStorage(ImageProperties imageProperties) {
-        this.imageProperties = imageProperties;
-    }
 
     @Override
     public StoredFileInfo store(MultipartFile file, ImageSubDir subDir) {

@@ -8,12 +8,12 @@ import com.stocat.amumal.post.dto.UpdatePostResponse;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.service.PostImageMappingService;
 import com.stocat.amumal.post.validator.PostValidator;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UpdatePostUseCase {
 
     private final PostRepository postRepository;

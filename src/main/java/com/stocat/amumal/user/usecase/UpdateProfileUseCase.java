@@ -8,12 +8,12 @@ import com.stocat.amumal.user.dto.UpdateProfileResponse;
 import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.service.UserImageMappingService;
 import com.stocat.amumal.user.validator.UserValidator;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UpdateProfileUseCase {
 
     private final UserRepository userRepository;

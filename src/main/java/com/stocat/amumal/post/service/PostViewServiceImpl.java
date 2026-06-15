@@ -1,12 +1,12 @@
 package com.stocat.amumal.post.service;
 
 import com.stocat.amumal.common.config.CacheConfig;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class PostViewServiceImpl implements PostViewService {
 

@@ -8,11 +8,13 @@ import com.stocat.amumal.image.repository.ImageRepository;
 import com.stocat.amumal.image.storage.FileStorage;
 import com.stocat.amumal.image.storage.StoredFileInfo;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
 
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
@@ -21,11 +23,6 @@ public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
     private final FileStorage fileStorage;
-
-    public ImageServiceImpl(ImageRepository imageRepository, FileStorage fileStorage) {
-        this.imageRepository = imageRepository;
-        this.fileStorage = fileStorage;
-    }
 
     @Override
     @Transactional

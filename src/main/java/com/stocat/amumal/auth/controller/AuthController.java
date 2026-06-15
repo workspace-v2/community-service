@@ -15,7 +15,7 @@ import com.stocat.amumal.user.dto.SignUpResponse;
 import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.usecase.SignUpUseCase;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthController {

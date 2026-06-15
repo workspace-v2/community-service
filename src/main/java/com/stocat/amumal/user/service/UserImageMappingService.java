@@ -6,11 +6,11 @@ import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.domain.UserImage;
 import com.stocat.amumal.user.repository.UserImageRepository;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserImageMappingService {
 
     private final ImageRepository imageRepository;

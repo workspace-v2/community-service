@@ -19,7 +19,7 @@ import com.stocat.amumal.post.usecase.UploadPostImageUseCase;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @Validated
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/posts")
 public class PostController {

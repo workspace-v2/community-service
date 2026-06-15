@@ -16,28 +16,18 @@ import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.validator.UserValidator;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenStore refreshTokenStore;
     private final JwtProvider jwtProvider;
     private final UserValidator userValidator;
-
-    public AuthServiceImpl(
-            UserRepository userRepository,
-            RefreshTokenStore refreshTokenStore,
-            JwtProvider jwtProvider,
-            UserValidator userValidator
-    ) {
-        this.userRepository = userRepository;
-        this.refreshTokenStore = refreshTokenStore;
-        this.jwtProvider = jwtProvider;
-        this.userValidator = userValidator;
-    }
 
     @Override
     @Transactional

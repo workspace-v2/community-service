@@ -15,13 +15,13 @@ import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.validator.PostValidator;
 import com.stocat.amumal.user.repository.UserRepository;
 import java.util.List;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class PostServiceImpl implements PostService {
 

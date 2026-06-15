@@ -7,19 +7,16 @@ import com.stocat.amumal.user.dto.UpdatePasswordRequest;
 import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.validator.UserValidator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserValidator userValidator;
-
-    public UserServiceImpl(UserRepository userRepository, UserValidator userValidator) {
-        this.userRepository = userRepository;
-        this.userValidator = userValidator;
-    }
 
     @Override
     public UserResponse getUser(Long userId) {

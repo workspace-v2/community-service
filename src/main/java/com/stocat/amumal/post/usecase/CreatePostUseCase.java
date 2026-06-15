@@ -10,12 +10,12 @@ import com.stocat.amumal.post.service.PostImageMappingService;
 import com.stocat.amumal.post.validator.PostValidator;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CreatePostUseCase {
 
     private final PostRepository postRepository;
