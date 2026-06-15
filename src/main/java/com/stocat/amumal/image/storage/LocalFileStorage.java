@@ -3,6 +3,7 @@ package com.stocat.amumal.image.storage;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.image.config.ImageProperties;
+import com.stocat.amumal.image.domain.ImageSubDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +22,7 @@ public class LocalFileStorage implements FileStorage {
     }
 
     @Override
-    public StoredFileInfo store(MultipartFile file, String subDir) {
+    public StoredFileInfo store(MultipartFile file, ImageSubDir subDir) {
         // 원본 파일명에서 확장자 추출 후 UUID 기반 저장 파일명 생성
         // 원본 파일명을 그대로 쓰면 중복 및 보안 문제가 생기므로 UUID로 대체
         String originalFilename = file.getOriginalFilename();
@@ -29,7 +30,7 @@ public class LocalFileStorage implements FileStorage {
         String storedFilename = UUID.randomUUID() + extension;
 
         // baseDir + subDir 조합으로 실제 저장 디렉토리 경로 생성
-        Path uploadDir = Paths.get(imageProperties.getBaseDir(), subDir);
+        Path uploadDir = Paths.get(imageProperties.getBaseDir(), subDir.getValue());
 
         try {
             // 디렉토리가 없으면 생성, 이미 있으면 무시
@@ -43,7 +44,7 @@ public class LocalFileStorage implements FileStorage {
 
             // 클라이언트가 접근할 URL 생성
             // WebMvcConfig의 리소스 핸들러가 /images/** 를 uploadDir로 매핑하므로 컨텍스트 패스(/v1)를 포함한 경로로 반환
-            String fileUrl = "/v1/images/" + subDir + "/" + storedFilename;
+            String fileUrl = "/v1/images/" + subDir.getValue() + "/" + storedFilename;
 
             return new StoredFileInfo(storedFilename, filePath.toAbsolutePath().toString(), fileUrl);
         } catch (IOException e) {
