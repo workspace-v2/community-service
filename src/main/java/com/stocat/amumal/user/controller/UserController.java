@@ -8,12 +8,15 @@ import com.stocat.amumal.user.dto.UpdateProfileResponse;
 import com.stocat.amumal.user.dto.UserResponse;
 import com.stocat.amumal.user.service.UserService;
 import com.stocat.amumal.user.usecase.DeleteUserUseCase;
+import com.stocat.amumal.user.usecase.UpdateProfileUseCase;
+import com.stocat.amumal.user.usecase.UploadProfileImageUseCase;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +32,7 @@ public class UserController {
 
     private final UserService userService;
     private final DeleteUserUseCase deleteUserUseCase;
+    private final UpdateProfileUseCase updateProfileUseCase;
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
@@ -42,7 +46,7 @@ public class UserController {
             @AuthUserId Long userId,
             @RequestBody UpdateProfileRequest request
     ) {
-        return ApiResponse.of("수정 완료", userService.updateProfile(userId, request));
+        return ApiResponse.of("수정 완료", updateProfileUseCase.execute(userId, request));
     }
 
     @PatchMapping("/me/password")
