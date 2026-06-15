@@ -2,6 +2,7 @@ package com.stocat.amumal.post.controller;
 
 import com.stocat.amumal.auth.annotation.AuthUserId;
 import com.stocat.amumal.common.response.ApiResponse;
+import com.stocat.amumal.image.dto.PostFileUploadResponse;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
@@ -17,6 +18,7 @@ import com.stocat.amumal.post.usecase.UpdatePostUseCase;
 import com.stocat.amumal.post.usecase.UploadPostImageUseCase;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -38,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/posts")
 public class PostController {
 
+    private final UploadPostImageUseCase uploadPostImageUseCase;
     private final PostService postService;
     private final PostLikeService postLikeService;
     private final CreatePostUseCase createPostUseCase;
@@ -118,5 +121,13 @@ public class PostController {
             @AuthUserId Long userId
     ) {
         return ApiResponse.of("좋아요가 취소되었습니다.", postLikeService.unlikePost(postId, userId));
+    }
+
+    @PostMapping("/upload/attach-file")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<PostFileUploadResponse> uploadPostImage(
+            @RequestParam("postFile") MultipartFile file
+    ) {
+        return ApiResponse.of("파일이 업로드되었습니다.", uploadPostImageUseCase.execute(file));
     }
 }
