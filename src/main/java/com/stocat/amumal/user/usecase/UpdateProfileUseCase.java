@@ -29,13 +29,11 @@ public class UpdateProfileUseCase {
 
         String nickname = request.nickname() == null ? user.getNickname() : request.nickname().trim();
         String profileImageUrl =
-                request.profileImage() == null ? user.getProfileImageUrl() : request.profileImage().trim();
+                request.profileImage() == null ? null : request.profileImage().trim();
 
         user.updateProfile(nickname, profileImageUrl);
 
-        if (request.profileImage() != null) {
-            userImageMappingService.replace(user, request.profileImage());
-        }
+        userImageMappingService.replace(user, request.profileImage());
 
         return new UpdateProfileResponse(
                 user.getId(),
