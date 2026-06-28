@@ -29,6 +29,9 @@ spring:
 app:
   upload:
     base-dir: ./uploads
+  seed:
+    test-user-count: ${TEST_USER_COUNT:20}
+    test-user-password: ${TEST_USER_PASSWORD:Password1!}
   cors:
     allowed-origins:
       - http://localhost:8080
