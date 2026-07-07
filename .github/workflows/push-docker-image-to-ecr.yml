@@ -1,0 +1,68 @@
+name: Push Docker Image to AWS ECR
+on:
+  pull_request:
+    types: [ closed ]
+    branches:
+      - main
+#  workflow_run:
+#    workflows: [ "Springboot CI" ] # ci 성공 시
+#    types:
+#      - completed
+
+jobs:
+  Build:
+    if: github.event.pull_request.merged == true
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set environment variables using $GITHUB_ENV
+        run: |
+          echo "ECR_REPO=${{ secrets.AWS_ECR_REPO }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$(git rev-parse --short HEAD)-$(date +'%Y-%m-%d-%H-%M')" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
+
+      - name: Validate Environment Variables
+        run: |
+          echo "ECR_REPO=${{ env.ECR_REPO }}"
+          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
+          echo "AWS_REGION=${{ env.AWS_REGION }}"
+
+      - name: Make Gradle Wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Install dependencies and build the project
+        run: |
+          ./gradlew clean build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build the Docker image
+        run: |
+          docker build -t $ECR_REPO:$IMAGE_TAG .
+
+      - name: Tag the Docker image
+        run: |
+          docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
+
+      - name: Push the Docker image to Amazon ECR
+        run: |
+          docker push $ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REPO:latest
+
+      - name: Cleanup Docker images (optional)
+        run: |
+          docker rmi $ECR_REPO:$IMAGE_TAG || true
+          docker rmi $ECR_REPO:latest || true
