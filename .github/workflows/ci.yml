@@ -13,6 +13,20 @@ jobs:
   build: # 작업의 이름을 "build"로 정의합니다.
     runs-on: ubuntu-26.04
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: amumal
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     # 각 작업에서 실행할 단계(step)들을 정의합니다.
     steps:
       # 소스 코드를 체크아웃합니다.
