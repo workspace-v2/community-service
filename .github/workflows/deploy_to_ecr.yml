@@ -33,7 +33,7 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image      # ECR에 푸시하기위해 빌드하고 푸시하기위한 스탭
         env:
-          ECR_REPOSITORY: my-test
+          ECR_REPOSITORY: ${{ env.AWS_ECR_REPO_NAME }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: latest
         run: |
