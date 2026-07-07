@@ -1,9 +1,12 @@
 name: Push Docker Image to AWS ECR
 on:
-  pull_request:
-    types: [ closed ]
+  push: # 코드가 저장소로 푸시될 때 - 작동 테스트를 위해 임시 저장
     branches:
       - main
+#  pull_request:
+#    types: [ closed ]
+#    branches:
+#      - main
 #  workflow_run:
 #    workflows: [ "Springboot CI" ] # ci 성공 시
 #    types:
