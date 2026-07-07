@@ -18,7 +18,7 @@ jobs:
       # 소스 코드를 체크아웃합니다.
       - name: Checkout repository
         # GitHub 공식 checkout 액션을 사용하여 저장소의 코드를 가져옵니다.
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v3        # java 버전 설정
@@ -27,7 +27,7 @@ jobs:
           java-version: '21'
 
       - name: Cache Gradle packages
-        uses: actions/cache@v2                # Gradle dependency 캐싱 설정(테스트 속도 향상)
+        uses: actions/cache@v4                # Gradle dependency 캐싱 설정(테스트 속도 향상)
         with:
           path: |
             ~/.gradle/caches
