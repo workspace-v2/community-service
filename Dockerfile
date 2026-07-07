@@ -20,7 +20,7 @@ FROM amazoncorretto:21-alpine
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/amumal-0.0.1-SNAPSHOT.jar app.jar
-COPY --from=builder /app/global-bundle.pem global-bundle.pem
+#COPY --from=builder /app/global-bundle.pem global-bundle.pem
 
 EXPOSE 3000
 ENTRYPOINT ["java", "-jar", "app.jar"]
