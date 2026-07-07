@@ -14,7 +14,7 @@ on:
 
 jobs:
   Build:
-    if: github.event.pull_request.merged == true
+    #    if: github.event.pull_request.merged == true
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     steps:
