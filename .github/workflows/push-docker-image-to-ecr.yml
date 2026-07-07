@@ -56,9 +56,17 @@ jobs:
         run: |
           docker build -t $ECR_REPO:$IMAGE_TAG .
 
-      - name: Tag the Docker image
+      - name: Tag the Docker image as latest
         run: |
           docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
+
+      - name: Delete existing latest tag in ECR
+        run: |
+          REPO_NAME="${ECR_REPO##*/}"
+          aws ecr batch-delete-image \
+            --repository-name "$REPO_NAME" \
+            --region "$AWS_REGION" \
+            --image-ids imageTag=latest || true
 
       - name: Push the Docker image to Amazon ECR
         run: |
