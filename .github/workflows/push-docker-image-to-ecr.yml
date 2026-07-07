@@ -1,20 +1,13 @@
 name: Push Docker Image to AWS ECR
 on:
-  push: # 코드가 저장소로 푸시될 때 - 작동 테스트를 위해 임시 저장
+  pull_request:
+    types: [ closed ]
     branches:
       - main
-#  pull_request:
-#    types: [ closed ]
-#    branches:
-#      - main
-#  workflow_run:
-#    workflows: [ "Springboot CI" ] # ci 성공 시
-#    types:
-#      - completed
 
 jobs:
   Build:
-    #    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     steps:
