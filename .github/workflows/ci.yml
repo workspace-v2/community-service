@@ -59,7 +59,7 @@ jobs:
       - name: Uploads artifact
         uses: actions/upload-artifact@v7
         with:
-          name: build-artifact
+          name: build-artifact-${{github.sha}}
           path: |
             build/libs/*.jar
             !build/libs/*-plain.jar
