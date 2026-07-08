@@ -1,69 +1,69 @@
-name: Push Docker Image to AWS ECR
-
-on:
-  workflow_run:
-    workflows: [ "Springboot CI" ]
-    types:
-      - completed # CI 워크플로우가 종료되면
-
-jobs:
-  Build:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: amumal
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set environment variables using $GITHUB_ENV
-        run: |
-          echo "ECR_REPO=${{ secrets.AWS_ECR_REPO }}" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{github.sha}}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
-
-      - name: Validate Environment Variables
-        run: |
-          echo "ECR_REPO=${{ env.ECR_REPO }}"
-          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
-          echo "AWS_REGION=${{ env.AWS_REGION }}"
-
-      - name: Make Gradle Wrapper executable
-        run: chmod +x ./gradlew
-
-      - name: Install dependencies and build the project
-        run: |
-          ./gradlew clean build
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          #          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build the Docker image
-        run: |
-          docker build -t $ECR_REPO:$IMAGE_TAG .
-
-      - name: Push the Docker image to Amazon ECR
-        run: |
-          docker push $ECR_REPO:$IMAGE_TAG
+#name: Push Docker Image to AWS ECR
+#
+#on:
+#  workflow_run:
+#    workflows: [ "Springboot CI" ]
+#    types:
+#      - completed # CI 워크플로우가 종료되면
+#
+#jobs:
+#  Build:
+#    name: Build and Push Docker Image
+#    runs-on: ubuntu-latest
+#
+#    services:
+#      mysql:
+#        image: mysql:8.0
+#        env:
+#          MYSQL_DATABASE: amumal
+#          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+#        ports:
+#          - 3306:3306
+#        options: >-
+#          --health-cmd "mysqladmin ping -h 127.0.0.1"
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 5
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Set environment variables using $GITHUB_ENV
+#        run: |
+#          echo "ECR_REPO=${{ secrets.AWS_ECR_REPO }}" >> $GITHUB_ENV
+#          echo "IMAGE_TAG=${{github.sha}}" >> $GITHUB_ENV
+#          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
+#
+#      - name: Validate Environment Variables
+#        run: |
+#          echo "ECR_REPO=${{ env.ECR_REPO }}"
+#          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
+#          echo "AWS_REGION=${{ env.AWS_REGION }}"
+#
+#      - name: Make Gradle Wrapper executable
+#        run: chmod +x ./gradlew
+#
+#      - name: Install dependencies and build the project
+#        run: |
+#          ./gradlew clean build
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v3
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          #          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+#          aws-region: ${{ secrets.AWS_REGION }}
+#
+#      - name: Login to Amazon ECR
+#        id: login-ecr
+#        uses: aws-actions/amazon-ecr-login@v2
+#
+#      - name: Build the Docker image
+#        run: |
+#          docker build -t $ECR_REPO:$IMAGE_TAG .
+#
+#      - name: Push the Docker image to Amazon ECR
+#        run: |
+#          docker push $ECR_REPO:$IMAGE_TAG
