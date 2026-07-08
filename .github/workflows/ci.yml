@@ -3,7 +3,8 @@ name: Springboot CI
 on:
   push: # 코드가 저장소로 푸시될 때
     branches:
-      - main
+      - main # prod
+      - dev
   pull_request: # 풀 리퀘스트가 생성 또는 갱신될 때
     branches:
       - main
@@ -56,7 +57,8 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build                # Gradle build를 수행
 
-      - name: Uploads artifact
+      - name: Upload artifact # prod 가 업데이트 되는 경우만
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v7
         with:
           name: build-artifact-${{github.sha}}
