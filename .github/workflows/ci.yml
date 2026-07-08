@@ -60,6 +60,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: build-artifact
-          path:
+          path: |
             build/libs/*.jar
             !build/libs/*-plain.jar
