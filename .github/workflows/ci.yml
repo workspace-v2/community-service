@@ -55,3 +55,11 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build                # Gradle build를 수행
+
+      - name: Uploads artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifact
+          path:
+            build/libs/*.jar
+            !build/libs/*-plain.jar
