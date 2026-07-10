@@ -1,10 +1,13 @@
 name: Push Docker Image to AWS ECR and Deploy
 
+#on:
+#  workflow_run:
+#    workflows: [ "Springboot CI" ]
+#    types:
+#      - completed
+
 on:
-  workflow_run:
-    workflows: [ "Springboot CI" ]
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions:
   contents: read
