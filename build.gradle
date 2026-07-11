@@ -35,7 +35,7 @@ dependencies {
     implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.12.0'
     implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-mysql'
 
     compileOnly 'org.projectlombok:lombok'
