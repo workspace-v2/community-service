@@ -6,5 +6,5 @@ import org.springframework.data.repository.query.Param;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    void deleteAllByUser_Id(@Param("userId") Long userId);
+  void deleteAllByUser_Id(@Param("userId") Long userId);
 }

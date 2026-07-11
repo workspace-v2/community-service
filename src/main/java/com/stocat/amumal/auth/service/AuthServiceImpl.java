@@ -24,94 +24,104 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final RefreshTokenStore refreshTokenStore;
-    private final JwtProvider jwtProvider;
-    private final UserValidator userValidator;
+  private final UserRepository userRepository;
+  private final RefreshTokenStore refreshTokenStore;
+  private final JwtProvider jwtProvider;
+  private final UserValidator userValidator;
 
-    @Override
-    @Transactional
-    public LoginResult login(LoginRequest request) {
-        userValidator.validateEmail(request.email());
-        userValidator.validatePassword(request.password());
+  @Override
+  @Transactional
+  public LoginResult login(LoginRequest request) {
+    userValidator.validateEmail(request.email());
+    userValidator.validatePassword(request.password());
 
-        User user = userRepository.findByEmail(request.email().trim())
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
+    User user =
+        userRepository
+            .findByEmail(request.email().trim())
+            .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
 
-        if (!user.getPassword().equals(request.password())) {
-            throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
-        }
-
-        // 액세스 토큰 발급
-        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
-
-        // 리프레시 토큰 발급 후 DB 저장
-        String refreshTokenValue = jwtProvider.createRefreshToken(user.getId());
-        refreshTokenStore.deleteByUserId(user.getId());
-        refreshTokenStore.save(
-                new RefreshTokenEntry(refreshTokenValue, user.getId(),
-                        LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
-
-        // 응답 바디(LoginResponse)와 쿠키용 리프레시 토큰을 분리해 반환
-        long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
-        LoginResponse response = new LoginResponse(user.getId(), new TokenInfo(accessToken, expiresIn));
-        return new LoginResult(response, refreshTokenValue);
+    if (!user.getPassword().equals(request.password())) {
+      throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
     }
 
-    @Override
-    @Transactional
-    public TokenResult refreshAccessToken(String refreshToken) {
-        // 쿠키에 리프레시 토큰이 없으면 인증 실패
-        if (refreshToken == null) {
-            throw new ApiException(ErrorCode.INVALID_TOKEN);
-        }
+    // 액세스 토큰 발급
+    String accessToken =
+        jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
 
-        // 저장소에서 토큰 조회 → 없으면 탈취 또는 미발급
-        RefreshTokenEntry saved = refreshTokenStore.findByToken(refreshToken)
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TOKEN));
+    // 리프레시 토큰 발급 후 DB 저장
+    String refreshTokenValue = jwtProvider.createRefreshToken(user.getId());
+    refreshTokenStore.deleteByUserId(user.getId());
+    refreshTokenStore.save(
+        new RefreshTokenEntry(
+            refreshTokenValue,
+            user.getId(),
+            LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
 
-        // 만료된 토큰이면 저장소에서 삭제 후 인증 실패
-        if (saved.isExpired()) {
-            refreshTokenStore.delete(refreshToken);
-            throw new ApiException(ErrorCode.INVALID_TOKEN);
-        }
+    // 응답 바디(LoginResponse)와 쿠키용 리프레시 토큰을 분리해 반환
+    long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
+    LoginResponse response = new LoginResponse(user.getId(), new TokenInfo(accessToken, expiresIn));
+    return new LoginResult(response, refreshTokenValue);
+  }
 
-        // 새 액세스 토큰 발급
-        User user = userRepository.findById(saved.userId())
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TOKEN));
-        String newAccessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
-
-        // RTR: 기존 리프레시 토큰 폐기 후 새 토큰 발급·저장
-        String newRefreshTokenValue = jwtProvider.createRefreshToken(user.getId());
-        refreshTokenStore.delete(refreshToken);
-        refreshTokenStore.save(
-                new RefreshTokenEntry(newRefreshTokenValue, user.getId(),
-                        LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
-
-        // 새 액세스 토큰(응답 바디)과 새 리프레시 토큰(쿠키 교체용)을 분리해 반환
-        long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
-        return new TokenResult(new TokenInfo(newAccessToken, expiresIn), newRefreshTokenValue);
+  @Override
+  @Transactional
+  public TokenResult refreshAccessToken(String refreshToken) {
+    // 쿠키에 리프레시 토큰이 없으면 인증 실패
+    if (refreshToken == null) {
+      throw new ApiException(ErrorCode.INVALID_TOKEN);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public UserResponse getAuthenticatedUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+    // 저장소에서 토큰 조회 → 없으면 탈취 또는 미발급
+    RefreshTokenEntry saved =
+        refreshTokenStore
+            .findByToken(refreshToken)
+            .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TOKEN));
 
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getNickname(),
-                user.getProfileImageUrl()
-        );
+    // 만료된 토큰이면 저장소에서 삭제 후 인증 실패
+    if (saved.isExpired()) {
+      refreshTokenStore.delete(refreshToken);
+      throw new ApiException(ErrorCode.INVALID_TOKEN);
     }
 
-    @Override
-    @Transactional
-    public void logout(String refreshToken) {
-        if (refreshToken != null && !refreshToken.isBlank()) {
-            refreshTokenStore.delete(refreshToken);
-        }
+    // 새 액세스 토큰 발급
+    User user =
+        userRepository
+            .findById(saved.userId())
+            .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TOKEN));
+    String newAccessToken =
+        jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
+
+    // RTR: 기존 리프레시 토큰 폐기 후 새 토큰 발급·저장
+    String newRefreshTokenValue = jwtProvider.createRefreshToken(user.getId());
+    refreshTokenStore.delete(refreshToken);
+    refreshTokenStore.save(
+        new RefreshTokenEntry(
+            newRefreshTokenValue,
+            user.getId(),
+            LocalDateTime.now().plusDays(TokenConstants.REFRESH_TOKEN_TTL_DAYS)));
+
+    // 새 액세스 토큰(응답 바디)과 새 리프레시 토큰(쿠키 교체용)을 분리해 반환
+    long expiresIn = jwtProvider.getAccessTokenValidityInMilliseconds();
+    return new TokenResult(new TokenInfo(newAccessToken, expiresIn), newRefreshTokenValue);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public UserResponse getAuthenticatedUser(Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+    return new UserResponse(
+        user.getId(), user.getEmail(), user.getNickname(), user.getProfileImageUrl());
+  }
+
+  @Override
+  @Transactional
+  public void logout(String refreshToken) {
+    if (refreshToken != null && !refreshToken.isBlank()) {
+      refreshTokenStore.delete(refreshToken);
     }
+  }
 }

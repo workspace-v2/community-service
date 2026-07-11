@@ -1,4 +1,3 @@
 package com.stocat.amumal.image.dto;
 
-public record ProfileImageUploadResponse(String profileImageUrl) {
-}
+public record ProfileImageUploadResponse(String profileImageUrl) {}

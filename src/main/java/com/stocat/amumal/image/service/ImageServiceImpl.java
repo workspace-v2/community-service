@@ -17,36 +17,35 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
 
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp"
-    );
+  private static final Set<String> ALLOWED_CONTENT_TYPES =
+      Set.of("image/jpeg", "image/png", "image/webp");
 
-    private final ImageRepository imageRepository;
-    private final FileStorage fileStorage;
+  private final ImageRepository imageRepository;
+  private final FileStorage fileStorage;
 
-    @Override
-    @Transactional
-    public Image upload(MultipartFile file, ImageSubDir subDir) {
-        if (file == null || file.isEmpty()) {
-            throw new ApiException(ErrorCode.EMPTY_FILE);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new ApiException(ErrorCode.INVALID_IMAGE_FORMAT);
-        }
-
-        StoredFileInfo stored = fileStorage.store(file, subDir);
-
-        String originalFilename = file.getOriginalFilename();
-        Image image = Image.of(
-                originalFilename != null ? originalFilename : stored.storedFilename(),
-                stored.storedFilename(),
-                stored.filePath(),
-                stored.fileUrl(),
-                file.getSize(),
-                contentType
-        );
-        return imageRepository.save(image);
+  @Override
+  @Transactional
+  public Image upload(MultipartFile file, ImageSubDir subDir) {
+    if (file == null || file.isEmpty()) {
+      throw new ApiException(ErrorCode.EMPTY_FILE);
     }
+
+    String contentType = file.getContentType();
+    if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+      throw new ApiException(ErrorCode.INVALID_IMAGE_FORMAT);
+    }
+
+    StoredFileInfo stored = fileStorage.store(file, subDir);
+
+    String originalFilename = file.getOriginalFilename();
+    Image image =
+        Image.of(
+            originalFilename != null ? originalFilename : stored.storedFilename(),
+            stored.storedFilename(),
+            stored.filePath(),
+            stored.fileUrl(),
+            file.getSize(),
+            contentType);
+    return imageRepository.save(image);
+  }
 }

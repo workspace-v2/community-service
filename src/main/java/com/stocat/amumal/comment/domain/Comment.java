@@ -22,31 +22,31 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id")
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "comment_id")
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "post_id", nullable = false)
+  private Post post;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+  @Column(nullable = false, columnDefinition = "TEXT")
+  private String content;
 
-    public static Comment of(Post post, User user, String content) {
-        Comment comment = new Comment();
-        comment.post = post;
-        comment.user = user;
-        comment.content = content;
-        return comment;
-    }
+  public static Comment of(Post post, User user, String content) {
+    Comment comment = new Comment();
+    comment.post = post;
+    comment.user = user;
+    comment.content = content;
+    return comment;
+  }
 
-    public void update(String content) {
-        this.content = content;
-    }
+  public void update(String content) {
+    this.content = content;
+  }
 }

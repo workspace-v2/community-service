@@ -1,4 +1,3 @@
 package com.stocat.amumal.image.dto;
 
-public record PostFileUploadResponse(String fileUrl) {
-}
+public record PostFileUploadResponse(String fileUrl) {}

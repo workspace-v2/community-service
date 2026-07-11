@@ -17,38 +17,43 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Image extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "image_id")
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "image_id")
+  private Long id;
 
-    @Column(nullable = false)
-    private String originalFilename;
+  @Column(nullable = false)
+  private String originalFilename;
 
-    @Column(nullable = false)
-    private String storedFilename;
+  @Column(nullable = false)
+  private String storedFilename;
 
-    @Column(nullable = false, length = 500)
-    private String filePath;
+  @Column(nullable = false, length = 500)
+  private String filePath;
 
-    @Column(nullable = false, length = 500)
-    private String fileUrl;
+  @Column(nullable = false, length = 500)
+  private String fileUrl;
 
-    @Column(nullable = false)
-    private Long fileSize;
+  @Column(nullable = false)
+  private Long fileSize;
 
-    @Column(nullable = false, length = 100)
-    private String contentType;
+  @Column(nullable = false, length = 100)
+  private String contentType;
 
-    public static Image of(String originalFilename, String storedFilename, String filePath,
-                           String fileUrl, Long fileSize, String contentType) {
-        Image image = new Image();
-        image.originalFilename = originalFilename;
-        image.storedFilename = storedFilename;
-        image.filePath = filePath;
-        image.fileUrl = fileUrl;
-        image.fileSize = fileSize;
-        image.contentType = contentType;
-        return image;
-    }
+  public static Image of(
+      String originalFilename,
+      String storedFilename,
+      String filePath,
+      String fileUrl,
+      Long fileSize,
+      String contentType) {
+    Image image = new Image();
+    image.originalFilename = originalFilename;
+    image.storedFilename = storedFilename;
+    image.filePath = filePath;
+    image.fileUrl = fileUrl;
+    image.fileSize = fileSize;
+    image.contentType = contentType;
+    return image;
+  }
 }

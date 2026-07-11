@@ -12,21 +12,20 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @Component
 public class AuthUserIdArgumentResolver implements HandlerMethodArgumentResolver {
 
-    // 처리할 파라미터인지 판단: @AuthUserId + Long 타입
-    @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthUserId.class)
-                && parameter.getParameterType().equals(Long.class);
-    }
+  // 처리할 파라미터인지 판단: @AuthUserId + Long 타입
+  @Override
+  public boolean supportsParameter(MethodParameter parameter) {
+    return parameter.hasParameterAnnotation(AuthUserId.class)
+        && parameter.getParameterType().equals(Long.class);
+  }
 
-    // request attribute에서 userId를 꺼내 반환
-    @Override
-    public Object resolveArgument(
-            MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-    ) {
-        return webRequest.getAttribute("userId", NativeWebRequest.SCOPE_REQUEST);
-    }
+  // request attribute에서 userId를 꺼내 반환
+  @Override
+  public Object resolveArgument(
+      MethodParameter parameter,
+      ModelAndViewContainer mavContainer,
+      NativeWebRequest webRequest,
+      WebDataBinderFactory binderFactory) {
+    return webRequest.getAttribute("userId", NativeWebRequest.SCOPE_REQUEST);
+  }
 }

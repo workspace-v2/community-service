@@ -17,38 +17,38 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "user_id")
+  private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+  @Column(nullable = false, unique = true)
+  private String email;
 
-    @Column(nullable = false)
-    private String password;
+  @Column(nullable = false)
+  private String password;
 
-    @Column(nullable = false, length = 10)
-    private String nickname;
+  @Column(nullable = false, length = 10)
+  private String nickname;
 
-    @Column(length = 500)
-    private String profileImageUrl;
+  @Column(length = 500)
+  private String profileImageUrl;
 
-    public static User of(String email, String password, String nickname, String profileImageUrl) {
-        User user = new User();
-        user.email = email;
-        user.password = password;
-        user.nickname = nickname;
-        user.profileImageUrl = profileImageUrl;
-        return user;
-    }
+  public static User of(String email, String password, String nickname, String profileImageUrl) {
+    User user = new User();
+    user.email = email;
+    user.password = password;
+    user.nickname = nickname;
+    user.profileImageUrl = profileImageUrl;
+    return user;
+  }
 
-    public void updateProfile(String nickname, String profileImageUrl) {
-        this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
-    }
+  public void updateProfile(String nickname, String profileImageUrl) {
+    this.nickname = nickname;
+    this.profileImageUrl = profileImageUrl;
+  }
 
-    public void updatePassword(String password) {
-        this.password = password;
-    }
+  public void updatePassword(String password) {
+    this.password = password;
+  }
 }

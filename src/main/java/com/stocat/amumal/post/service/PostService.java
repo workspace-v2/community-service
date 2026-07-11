@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface PostService {
 
-    List<PostSummaryResponse> getPosts(int offset, int limit);
+  List<PostSummaryResponse> getPosts(int offset, int limit);
 
-    List<PostSummaryResponse> searchPosts(String keyword, int offset, int limit, PostSearchSort sort);
+  List<PostSummaryResponse> searchPosts(String keyword, int offset, int limit, PostSearchSort sort);
 
-    GetPostResponse getPost(Long postId, Long userId);
+  GetPostResponse getPost(Long postId, Long userId);
 
-    void deletePost(Long postId, Long userId);
+  void deletePost(Long postId, Long userId);
 }

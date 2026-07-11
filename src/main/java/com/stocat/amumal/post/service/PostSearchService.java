@@ -9,13 +9,13 @@ import com.stocat.amumal.post.dto.UpdatePostResponse;
 
 public interface PostSearchService {
 
-    CreatePostResponse createPost(Long userId, CreatePostRequest request);
+  CreatePostResponse createPost(Long userId, CreatePostRequest request);
 
-    GetPostsResponse getPosts(Long cursor, int size);
+  GetPostsResponse getPosts(Long cursor, int size);
 
-    GetPostResponse getPost(Long postId, Long userId);
+  GetPostResponse getPost(Long postId, Long userId);
 
-    UpdatePostResponse updatePost(Long postId, Long userId, UpdatePostRequest request);
+  UpdatePostResponse updatePost(Long postId, Long userId, UpdatePostRequest request);
 
-    void deletePost(Long postId, Long userId);
+  void deletePost(Long postId, Long userId);
 }

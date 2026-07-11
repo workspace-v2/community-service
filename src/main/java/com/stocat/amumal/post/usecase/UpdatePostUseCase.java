@@ -16,34 +16,31 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UpdatePostUseCase {
 
-    private final PostRepository postRepository;
-    private final PostValidator postValidator;
-    private final PostImageMappingService postImageMappingService;
+  private final PostRepository postRepository;
+  private final PostValidator postValidator;
+  private final PostImageMappingService postImageMappingService;
 
-    @Transactional
-    public UpdatePostResponse execute(Long postId, Long userId, UpdatePostRequest request) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
+  @Transactional
+  public UpdatePostResponse execute(Long postId, Long userId, UpdatePostRequest request) {
+    Post post =
+        postRepository
+            .findById(postId)
+            .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
-        postValidator.validateUpdatePost(request);
+    postValidator.validateUpdatePost(request);
 
-        if (!post.getUser().getId().equals(userId)) {
-            throw new ApiException(ErrorCode.POST_UPDATE_FORBIDDEN);
-        }
-
-        post.update(
-                request.title().trim(),
-                request.content().trim(),
-                request.image() == null ? null : request.image().trim()
-        );
-
-        postImageMappingService.replace(post, request.image());
-
-        return new UpdatePostResponse(
-                post.getId(),
-                post.getTitle(),
-                post.getContent(),
-                post.getImageUrl()
-        );
+    if (!post.getUser().getId().equals(userId)) {
+      throw new ApiException(ErrorCode.POST_UPDATE_FORBIDDEN);
     }
+
+    post.update(
+        request.title().trim(),
+        request.content().trim(),
+        request.image() == null ? null : request.image().trim());
+
+    postImageMappingService.replace(post, request.image());
+
+    return new UpdatePostResponse(
+        post.getId(), post.getTitle(), post.getContent(), post.getImageUrl());
+  }
 }

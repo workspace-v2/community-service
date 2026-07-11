@@ -10,5 +10,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "app.cookie")
 public class CookieProperties {
-    private boolean secure;
+  private boolean secure;
 }

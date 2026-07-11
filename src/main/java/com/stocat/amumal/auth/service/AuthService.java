@@ -7,11 +7,11 @@ import com.stocat.amumal.user.dto.UserResponse;
 
 public interface AuthService {
 
-    LoginResult login(LoginRequest request);
+  LoginResult login(LoginRequest request);
 
-    TokenResult refreshAccessToken(String refreshToken);
+  TokenResult refreshAccessToken(String refreshToken);
 
-    UserResponse getAuthenticatedUser(Long userId);
+  UserResponse getAuthenticatedUser(Long userId);
 
-    void logout(String refreshToken);
+  void logout(String refreshToken);
 }

@@ -30,62 +30,57 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/users")
 public class UserController {
 
-    private final UploadProfileImageUseCase uploadProfileImageUseCase;
-    private final UserService userService;
-    private final DeleteUserUseCase deleteUserUseCase;
-    private final UpdateProfileUseCase updateProfileUseCase;
+  private final UploadProfileImageUseCase uploadProfileImageUseCase;
+  private final UserService userService;
+  private final DeleteUserUseCase deleteUserUseCase;
+  private final UpdateProfileUseCase updateProfileUseCase;
 
-    @GetMapping("/me")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<UserResponse> getUser(@AuthUserId Long userId) {
-        return ApiResponse.of("회원정보 조회에 성공했습니다.", userService.getUser(userId));
-    }
+  @GetMapping("/me")
+  @ResponseStatus(HttpStatus.OK)
+  public ApiResponse<UserResponse> getUser(@AuthUserId Long userId) {
+    return ApiResponse.of("회원정보 조회에 성공했습니다.", userService.getUser(userId));
+  }
 
-    @PutMapping("/me")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<UpdateProfileResponse> updateProfile(
-            @AuthUserId Long userId,
-            @RequestBody UpdateProfileRequest request
-    ) {
-        return ApiResponse.of("수정 완료", updateProfileUseCase.execute(userId, request));
-    }
+  @PutMapping("/me")
+  @ResponseStatus(HttpStatus.CREATED)
+  public ApiResponse<UpdateProfileResponse> updateProfile(
+      @AuthUserId Long userId, @RequestBody UpdateProfileRequest request) {
+    return ApiResponse.of("수정 완료", updateProfileUseCase.execute(userId, request));
+  }
 
-    @PatchMapping("/me/password")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<Void> updatePassword(
-            @AuthUserId Long userId,
-            @RequestBody UpdatePasswordRequest request
-    ) {
-        userService.updatePassword(userId, request);
-        return ApiResponse.of("수정 완료", null);
-    }
+  @PatchMapping("/me/password")
+  @ResponseStatus(HttpStatus.CREATED)
+  public ApiResponse<Void> updatePassword(
+      @AuthUserId Long userId, @RequestBody UpdatePasswordRequest request) {
+    userService.updatePassword(userId, request);
+    return ApiResponse.of("수정 완료", null);
+  }
 
-    @DeleteMapping("/me")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Void> deleteUser(@AuthUserId Long userId) {
-        deleteUserUseCase.execute(userId);
-        return ApiResponse.of("회원 탈퇴가 완료되었습니다.", null);
-    }
+  @DeleteMapping("/me")
+  @ResponseStatus(HttpStatus.OK)
+  public ApiResponse<Void> deleteUser(@AuthUserId Long userId) {
+    deleteUserUseCase.execute(userId);
+    return ApiResponse.of("회원 탈퇴가 완료되었습니다.", null);
+  }
 
-    @PostMapping("/upload/profile-image")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<ProfileImageUploadResponse> uploadProfileImage(
-            @RequestParam("profileImage") MultipartFile file
-    ) {
-        return ApiResponse.of("프로필 이미지가 업로드되었습니다.", uploadProfileImageUseCase.execute(file));
-    }
+  @PostMapping("/upload/profile-image")
+  @ResponseStatus(HttpStatus.CREATED)
+  public ApiResponse<ProfileImageUploadResponse> uploadProfileImage(
+      @RequestParam("profileImage") MultipartFile file) {
+    return ApiResponse.of("프로필 이미지가 업로드되었습니다.", uploadProfileImageUseCase.execute(file));
+  }
 
-    @GetMapping("/email/check")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Void> checkEmail(@RequestParam("email") String email) {
-        userService.isEmailAvailable(email);
-        return ApiResponse.of("사용 가능한 이메일입니다.", null);
-    }
+  @GetMapping("/email/check")
+  @ResponseStatus(HttpStatus.OK)
+  public ApiResponse<Void> checkEmail(@RequestParam("email") String email) {
+    userService.isEmailAvailable(email);
+    return ApiResponse.of("사용 가능한 이메일입니다.", null);
+  }
 
-    @GetMapping("/nickname/check")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Void> checkNickname(@RequestParam("nickname") String nickname) {
-        userService.isNicknameAvailable(nickname);
-        return ApiResponse.of("사용 가능한 닉네임입니다.", null);
-    }
+  @GetMapping("/nickname/check")
+  @ResponseStatus(HttpStatus.OK)
+  public ApiResponse<Void> checkNickname(@RequestParam("nickname") String nickname) {
+    userService.isNicknameAvailable(nickname);
+    return ApiResponse.of("사용 가능한 닉네임입니다.", null);
+  }
 }

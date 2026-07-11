@@ -5,5 +5,5 @@ import com.stocat.amumal.image.domain.ImageSubDir;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageService {
-    Image upload(MultipartFile file, ImageSubDir subDir);
+  Image upload(MultipartFile file, ImageSubDir subDir);
 }

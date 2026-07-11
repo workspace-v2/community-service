@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PostViewEventPublisher {
 
-    private final ApplicationEventPublisher applicationEventPublisher;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
-    public void publishEvent(Long postId) {
-        applicationEventPublisher.publishEvent(new PostViewedEvent(postId));
-    }
+  public void publishEvent(Long postId) {
+    applicationEventPublisher.publishEvent(new PostViewedEvent(postId));
+  }
 }

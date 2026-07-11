@@ -11,14 +11,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostLikeId implements Serializable {
 
-    @Column(name = "post_id")
-    private Long postId;
+  @Column(name = "post_id")
+  private Long postId;
 
-    @Column(name = "user_id")
-    private Long userId;
+  @Column(name = "user_id")
+  private Long userId;
 
-    public PostLikeId(Long postId, Long userId) {
-        this.postId = postId;
-        this.userId = userId;
-    }
+  public PostLikeId(Long postId, Long userId) {
+    this.postId = postId;
+    this.userId = userId;
+  }
 }

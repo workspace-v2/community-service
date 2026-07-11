@@ -11,5 +11,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "app.cors")
 public class CorsProperties {
-    private List<String> allowedOrigins;
+  private List<String> allowedOrigins;
 }

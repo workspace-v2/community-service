@@ -12,10 +12,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UploadProfileImageUseCase {
 
-    private final ImageService imageService;
+  private final ImageService imageService;
 
-    public ProfileImageUploadResponse execute(MultipartFile file) {
-        Image image = imageService.upload(file, ImageSubDir.PROFILE_IMAGES);
-        return new ProfileImageUploadResponse(image.getFileUrl());
-    }
+  public ProfileImageUploadResponse execute(MultipartFile file) {
+    Image image = imageService.upload(file, ImageSubDir.PROFILE_IMAGES);
+    return new ProfileImageUploadResponse(image.getFileUrl());
+  }
 }

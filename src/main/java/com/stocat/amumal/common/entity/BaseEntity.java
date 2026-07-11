@@ -14,21 +14,20 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 public abstract class BaseEntity {
 
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+  @CreatedDate
+  @Column(updatable = false)
+  private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+  @LastModifiedDate private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 
-    public void delete() {
-        this.deletedAt = LocalDateTime.now();
-    }
+  public void delete() {
+    this.deletedAt = LocalDateTime.now();
+  }
 
-    public boolean isDeleted() {
-        return this.deletedAt != null;
-    }
+  public boolean isDeleted() {
+    return this.deletedAt != null;
+  }
 }

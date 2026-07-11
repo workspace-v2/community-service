@@ -5,15 +5,15 @@ import com.stocat.amumal.user.dto.UserResponse;
 
 public interface UserService {
 
-    UserResponse getUser(Long userId);
+  UserResponse getUser(Long userId);
 
-    void updatePassword(Long userId, UpdatePasswordRequest request);
+  void updatePassword(Long userId, UpdatePasswordRequest request);
 
-    void validateUserExists(Long userId);
+  void validateUserExists(Long userId);
 
-    void deleteUser(Long userId);
+  void deleteUser(Long userId);
 
-    void isEmailAvailable(String email);
+  void isEmailAvailable(String email);
 
-    void isNicknameAvailable(String nickname);
+  void isNicknameAvailable(String nickname);
 }

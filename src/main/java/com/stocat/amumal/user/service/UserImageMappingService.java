@@ -13,17 +13,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserImageMappingService {
 
-    private final ImageRepository imageRepository;
-    private final UserImageRepository userImageRepository;
+  private final ImageRepository imageRepository;
+  private final UserImageRepository userImageRepository;
 
-    public void replace(User user, String profileImageUrl) {
-        userImageRepository.deleteAllById_UserId(user.getId());
+  public void replace(User user, String profileImageUrl) {
+    userImageRepository.deleteAllById_UserId(user.getId());
 
-        if (profileImageUrl == null || profileImageUrl.isBlank()) {
-            return;
-        }
-
-        Optional<Image> image = imageRepository.findByFileUrl(profileImageUrl.trim());
-        image.ifPresent(img -> userImageRepository.save(UserImage.of(user, img)));
+    if (profileImageUrl == null || profileImageUrl.isBlank()) {
+      return;
     }
+
+    Optional<Image> image = imageRepository.findByFileUrl(profileImageUrl.trim());
+    image.ifPresent(img -> userImageRepository.save(UserImage.of(user, img)));
+  }
 }

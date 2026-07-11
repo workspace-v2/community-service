@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PostViewEventListener {
 
-    private final PostViewService postViewService;
+  private final PostViewService postViewService;
 
-    @EventListener
-    public void handle(PostViewedEvent event) {
-        postViewService.incrementViewCountCache(event.postId());
-    }
+  @EventListener
+  public void handle(PostViewedEvent event) {
+    postViewService.incrementViewCountCache(event.postId());
+  }
 }

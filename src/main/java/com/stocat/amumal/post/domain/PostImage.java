@@ -19,24 +19,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostImage extends BaseEntity {
 
-    @EmbeddedId
-    private PostImageId id;
+  @EmbeddedId private PostImageId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("postId")
-    @JoinColumn(name = "post_id")
-    private Post post;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @MapsId("postId")
+  @JoinColumn(name = "post_id")
+  private Post post;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("imageId")
-    @JoinColumn(name = "image_id")
-    private Image image;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @MapsId("imageId")
+  @JoinColumn(name = "image_id")
+  private Image image;
 
-    public static PostImage of(Post post, Image image) {
-        PostImage postImage = new PostImage();
-        postImage.id = new PostImageId(post.getId(), image.getId());
-        postImage.post = post;
-        postImage.image = image;
-        return postImage;
-    }
+  public static PostImage of(Post post, Image image) {
+    PostImage postImage = new PostImage();
+    postImage.id = new PostImageId(post.getId(), image.getId());
+    postImage.post = post;
+    postImage.image = image;
+    return postImage;
+  }
 }

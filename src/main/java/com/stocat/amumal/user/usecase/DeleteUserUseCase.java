@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DeleteUserUseCase {
 
-    private final UserService userService;
-    private final PostRepository postRepository;
+  private final UserService userService;
+  private final PostRepository postRepository;
 
-    public void execute(Long userId) {
-        userService.validateUserExists(userId);
+  public void execute(Long userId) {
+    userService.validateUserExists(userId);
 
-        // TODO: 댓글 삭제
-        postRepository.deleteAllByUser_Id(userId);
-        userService.deleteUser(userId);
-    }
+    // TODO: 댓글 삭제
+    postRepository.deleteAllByUser_Id(userId);
+    userService.deleteUser(userId);
+  }
 }

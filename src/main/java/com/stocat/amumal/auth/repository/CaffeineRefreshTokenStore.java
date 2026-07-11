@@ -11,27 +11,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class CaffeineRefreshTokenStore implements RefreshTokenStore {
 
-    private final Cache<String, RefreshTokenEntry> cache = Caffeine.newBuilder()
-            .expireAfterWrite(TokenConstants.REFRESH_TOKEN_TTL_DAYS, TimeUnit.DAYS)
-            .build();
+  private final Cache<String, RefreshTokenEntry> cache =
+      Caffeine.newBuilder()
+          .expireAfterWrite(TokenConstants.REFRESH_TOKEN_TTL_DAYS, TimeUnit.DAYS)
+          .build();
 
-    @Override
-    public void save(RefreshTokenEntry entry) {
-        cache.put(entry.token(), entry);
-    }
+  @Override
+  public void save(RefreshTokenEntry entry) {
+    cache.put(entry.token(), entry);
+  }
 
-    @Override
-    public Optional<RefreshTokenEntry> findByToken(String token) {
-        return Optional.ofNullable(cache.getIfPresent(token));
-    }
+  @Override
+  public Optional<RefreshTokenEntry> findByToken(String token) {
+    return Optional.ofNullable(cache.getIfPresent(token));
+  }
 
-    @Override
-    public void deleteByUserId(Long userId) {
-        cache.asMap().values().removeIf(entry -> entry.userId().equals(userId));
-    }
+  @Override
+  public void deleteByUserId(Long userId) {
+    cache.asMap().values().removeIf(entry -> entry.userId().equals(userId));
+  }
 
-    @Override
-    public void delete(String token) {
-        cache.invalidate(token);
-    }
+  @Override
+  public void delete(String token) {
+    cache.invalidate(token);
+  }
 }

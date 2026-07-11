@@ -10,5 +10,4 @@ import java.lang.annotation.Target;
 // AuthUserIdArgumentResolver에서 @AuthUserId 파라미터에 꺼내서 주입
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AuthUserId {
-}
+public @interface AuthUserId {}

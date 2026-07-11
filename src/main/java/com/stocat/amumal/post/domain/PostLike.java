@@ -25,29 +25,28 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class PostLike extends CreatedEntity {
 
-    // @EmbeddedId: 복합키 객체를 PK로 사용
-    @EmbeddedId
-    private PostLikeId id;
+  // @EmbeddedId: 복합키 객체를 PK로 사용
+  @EmbeddedId private PostLikeId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("postId") // PostLikeId.postId 값을 post.id로 자동으로 채워줌
-    @JoinColumn(name = "post_id")
-    private Post post;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @MapsId("postId") // PostLikeId.postId 값을 post.id로 자동으로 채워줌
+  @JoinColumn(name = "post_id")
+  private Post post;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("userId")
-    @JoinColumn(name = "user_id")
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @MapsId("userId")
+  @JoinColumn(name = "user_id")
+  private User user;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @CreatedDate
+  @Column(nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    public static PostLike of(Post post, User user) {
-        PostLike postLike = new PostLike();
-        postLike.id = new PostLikeId(post.getId(), user.getId());
-        postLike.post = post;
-        postLike.user = user;
-        return postLike;
-    }
+  public static PostLike of(Post post, User user) {
+    PostLike postLike = new PostLike();
+    postLike.id = new PostLikeId(post.getId(), user.getId());
+    postLike.post = post;
+    postLike.user = user;
+    return postLike;
+  }
 }

@@ -10,5 +10,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "app.upload")
 public class ImageProperties {
-    private String baseDir = "./uploads";
+  private String baseDir = "./uploads";
 }

@@ -11,14 +11,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserImageId implements Serializable {
 
-    @Column(name = "user_id")
-    private Long userId;
+  @Column(name = "user_id")
+  private Long userId;
 
-    @Column(name = "image_id")
-    private Long imageId;
+  @Column(name = "image_id")
+  private Long imageId;
 
-    public UserImageId(Long userId, Long imageId) {
-        this.userId = userId;
-        this.imageId = imageId;
-    }
+  public UserImageId(Long userId, Long imageId) {
+    this.userId = userId;
+    this.imageId = imageId;
+  }
 }
