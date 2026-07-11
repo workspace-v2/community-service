@@ -1,4 +1,4 @@
-name: Push Docker Image to AWS ECR
+name: Push Docker Image to GHCR
 
 #on:
 #  workflow_run:
@@ -12,27 +12,32 @@ on:
 permissions: # GITHUB_TOKEN을 사용하여 권한 제어
   contents: read # 리포지토리의 컨텐츠로 작업
   actions: read # github action의 read 작업 허용
+  packages: write # GitHub Packages에 패키지를 업로드할 권한
 
 jobs:
   Upload:
-    name: Push Docker Image from Workflow Artifact to ECR
+    name: Push Docker Image from Workflow Artifact to GHCR
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-26.04
 
     env:
-      ECR_REPO: ${{ secrets.AWS_ECR_REPO }}
       COMMIT_HASH_VALUE: ${{ github.event.workflow_run.head_sha }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # GHCR에 올릴 이미지 이름 생성 및 이후 다음 Step 에서 사용 가능하도록 환경변수로 저장
+      # Docker image 명명규칙이 소문자 작성이므로 lower로 변환
+      - name: Set GHCR image name
+        run: |
+          REPOSITORY_LOWER=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=ghcr.io/$REPOSITORY_LOWER" >> "$GITHUB_ENV"
+
       - name: Validate Environment Variables
         run: |
-          echo "ECR_REPO=$ECR_REPO"
+          echo "IMAGE_NAME=$IMAGE_NAME"
           echo "COMMIT_HASH_VALUE=$COMMIT_HASH_VALUE"
-          echo "AWS_REGION=$AWS_REGION"
 
       - name: Download build artifact from CI
         uses: actions/download-artifact@v8
@@ -42,20 +47,17 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6.1.0
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REPO:$COMMIT_HASH_VALUE .
+          docker build -t "$IMAGE_NAME:$COMMIT_HASH_VALUE" .
 
-      - name: Push Docker image to Amazon ECR
+      - name: Push Docker image to GHCR
         run: |
-          docker push $ECR_REPO:$COMMIT_HASH_VALUE
+          docker push "$IMAGE_NAME:$COMMIT_HASH_VALUE"
