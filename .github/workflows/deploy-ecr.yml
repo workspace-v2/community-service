@@ -1,8 +1,8 @@
-name: Push Docker Image to AWS ECR and Deploy
+name: Deploy Docker Image from AWS ECR
 
 #on:
 #  workflow_run:
-#    workflows: [ "Springboot CI" ]
+#    workflows: [ "Push Docker Image to AWS ECR" ]
 #    types:
 #      - completed
 
@@ -14,55 +14,9 @@ permissions:
   actions: read
 
 jobs:
-  Upload:
-    name: Push Docker Image from Workflow Artifact to ECR
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
-    runs-on: ubuntu-26.04
-
-    env:
-      ECR_REPO: ${{ secrets.AWS_ECR_REPO }}
-      COMMIT_HASH_VALUE: ${{ github.event.workflow_run.head_sha }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Environment Variables
-        run: |
-          echo "ECR_REPO=$ECR_REPO"
-          echo "COMMIT_HASH_VALUE=$COMMIT_HASH_VALUE"
-          echo "AWS_REGION=$AWS_REGION"
-
-      - name: Download build artifact from CI
-        uses: actions/download-artifact@v8
-        with:
-          name: build-artifact-${{ github.event.workflow_run.head_sha }}
-          path: build/libs
-          github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6.1.0
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Docker image
-        run: |
-          docker build -t $ECR_REPO:$COMMIT_HASH_VALUE .
-
-      - name: Push Docker image to Amazon ECR
-        run: |
-          docker push $ECR_REPO:$COMMIT_HASH_VALUE
-
   Deploy:
-    needs: Upload
     name: Deploy via SSM
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-26.04
 
     env:
@@ -88,7 +42,7 @@ jobs:
         id: send-command
         run: |
           ECR_REGISTRY="${ECR_REPO%%/*}"
-
+          
           DEPLOY_SCRIPT=$(cat <<EOF
           set -e
           aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
@@ -105,9 +59,9 @@ jobs:
           docker image prune -f
           EOF
           )
-
+          
           ENCODED_SCRIPT=$(printf '%s' "$DEPLOY_SCRIPT" | base64 | tr -d '\n')
-
+          
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
@@ -115,7 +69,7 @@ jobs:
             --parameters commands="echo $ENCODED_SCRIPT | base64 -d | bash" \
             --query "Command.CommandId" \
             --output text)
-
+          
           echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
 
       - name: Wait for command to finish
@@ -125,27 +79,27 @@ jobs:
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" || true
-
+          
           STATUS=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
             --query "Status" \
             --output text)
-
+          
           echo "--- stdout ---"
           aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
             --query "StandardOutputContent" \
             --output text
-
+          
           echo "--- stderr ---"
           aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
             --query "StandardErrorContent" \
             --output text
-
+          
           if [ "$STATUS" != "Success" ]; then
             echo "SSM command finished with status: $STATUS"
             exit 1
