@@ -1,10 +1,13 @@
 name: Push Docker Image to GHCR
 
+#on:
+#  workflow_run:
+#    workflows: [ "Springboot CI" ]
+#    types:
+#      - completed
+
 on:
-  workflow_run:
-    workflows: [ "Springboot CI" ]
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions: # GITHUB_TOKEN을 사용하여 권한 제어
   contents: read # 리포지토리의 컨텐츠로 작업
