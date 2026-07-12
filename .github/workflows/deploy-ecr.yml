@@ -38,6 +38,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # 서버가 뜰 수 있는지 메모리 체크
+      - name: Check server memory before deploy
+        env:
+          MIN_AVAILABLE_MB: 400 # 임의 기준치
+        run: .github/scripts/aws/check-memory.sh
+
       - name: Send deploy command via SSM
         id: send-command
         run: |
