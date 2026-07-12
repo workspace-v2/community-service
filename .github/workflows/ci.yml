@@ -1,16 +1,13 @@
 name: Springboot CI
 
-#on:
-#  push: # 코드가 저장소로 푸시될 때
-#    branches:
-#      - main # prod
-#      - dev
-#  pull_request: # 풀 리퀘스트가 생성 또는 갱신될 때
-#    branches:
-#      - main
-
 on:
-  workflow_dispatch:
+  push: # 코드가 저장소로 푸시될 때
+    branches:
+      - main # prod
+      - dev
+  pull_request: # 풀 리퀘스트가 생성 또는 갱신될 때
+    branches:
+      - main
 
 # 실행할 작업을 정의하는 영역입니다.
 jobs:
