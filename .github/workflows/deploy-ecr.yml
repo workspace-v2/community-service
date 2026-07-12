@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-26.04
 
     env:
-      COMMIT_HASH_VALUE: ${{ github.sha }}
       INSTANCE_ID: ${{ secrets.AWS_EC2_INSTANCE_ID }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
@@ -40,6 +39,14 @@ jobs:
         run: |
           IMAGE_REPO="ghcr.io/$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
           echo "IMAGE_REPO=$IMAGE_REPO" >> "$GITHUB_ENV"
+
+      # GHCR에 실제로 가장 최근 올라온 이미지 태그를 조회
+      - name: Get latest published image tag
+        env:
+          GH_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          TAG=$(gh api "/orgs/${{ github.repository_owner }}/packages/container/amumal-community/versions" --jq 'sort_by(.created_at) | last | .metadata.container.tags[0] // empty')
+          echo "COMMIT_HASH_VALUE=$TAG" >> "$GITHUB_ENV"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.1.0
