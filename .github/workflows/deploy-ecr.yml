@@ -31,6 +31,10 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }} # 나중에 packages:read 권한만 있는 토큰으로 변경
 
     steps:
+      # 러너는 빈 워크스페이스로 시작하므로, 이 저장소를 clone해서 받아오기 위해 추가
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       # GHCR 이미지 이름 계산 - publish-image.yml이 push할 때 쓰는 것과 동일한 규칙
       - name: Set GHCR image name
         run: |
