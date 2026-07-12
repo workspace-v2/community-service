@@ -14,6 +14,7 @@ permissions: # GITHUB_TOKEN을 사용하여 권한 제어
 jobs:
   Upload:
     name: Push Docker Image from Workflow Artifact to GHCR
+    # TODO: 운영환경 생기면, 그 경우에만 이미지 생성하도록
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-26.04
 

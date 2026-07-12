@@ -1,12 +1,10 @@
 name: Deploy Docker Image from GHCR
 
-#on:
-#  workflow_run:
-#    workflows: [ "Push Docker Image to AWS ECR" ]
-#    types:
-#      - completed
-
 on:
+  workflow_run:
+    workflows: [ "Push Docker Image to GHCR" ]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -16,7 +14,8 @@ permissions:
 jobs:
   Deploy:
     name: Deploy via SSM
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # workflow_dispatch(수동)면 바로 진행, workflow_run(자동)이면 publish가 main에서 성공했을 때만 진행
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-26.04
 
     env:
