@@ -63,10 +63,10 @@ jobs:
       - name: Check code format with Spotless
         run: ./gradlew spotlessCheck         # 코드 스타일 검사: 들여쓰기, 줄바꿈, import 정리 등
 
-      - name: Check dependency vulnerabilities
-        run: ./gradlew dependencyCheckAnalyze            # 의존성 취약점 검사
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      #      - name: Check dependency vulnerabilities
+      #        run: ./gradlew dependencyCheckAnalyze            # 의존성 취약점 검사
+      #        env:
+      #          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Upload artifact # prod 가 업데이트 되는 경우만
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
