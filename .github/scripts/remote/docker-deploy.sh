@@ -2,7 +2,7 @@
 set -e
 
 # 필수값 세팅 및 사전 검증
-ECR_REPO='${ECR_REPO}'
+IMAGE_REPO='${IMAGE_REPO}'
 COMMIT_HASH_VALUE='${COMMIT_HASH_VALUE}'
 DB_HOST='${DB_HOST}'
 DB_PORT='${DB_PORT}'
@@ -10,8 +10,10 @@ DB_NAME='${DB_NAME}'
 DB_USERNAME='${DB_USERNAME}'
 DB_PASSWORD='${DB_PASSWORD}'
 SERVER_PORT='${PORT}'
+GHCR_TOKEN='${GHCR_TOKEN}'
+GHCR_ACTOR='${GITHUB_ACTOR}'
 
-: "${ECR_REPO:?ECR_REPO가 설정되지 않았습니다.}"
+: "${IMAGE_REPO:?IMAGE_REPO가 설정되지 않았습니다.}"
 : "${COMMIT_HASH_VALUE:?COMMIT_HASH_VALUE가 설정되지 않았습니다.}"
 : "${DB_HOST:?DB_HOST가 설정되지 않았습니다.}"
 : "${DB_PORT:?DB_PORT가 설정되지 않았습니다.}"
@@ -19,8 +21,13 @@ SERVER_PORT='${PORT}'
 : "${DB_USERNAME:?DB_USERNAME가 설정되지 않았습니다.}"
 : "${DB_PASSWORD:?DB_PASSWORD가 설정되지 않았습니다.}"
 : "${SERVER_PORT:?SERVER_PORT 설정되지 않았습니다.}"
+: "${GHCR_TOKEN:?GHCR_TOKEN이 설정되지 않았습니다.}"
+: "${GHCR_ACTOR:?GHCR_ACTOR가 설정되지 않았습니다.}"
 
-docker pull ${ECR_REPO}:${COMMIT_HASH_VALUE}
+# GHCR 로그인
+echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
+
+docker pull ${IMAGE_REPO}:${COMMIT_HASH_VALUE}
 
 # 롤백 대비 - 현재 떠 있는 컨테이너가 어떤 이미지인지 미리 기억해두기
 # (최초 배포라 기존 컨테이너가 없으면 PREV_IMAGE는 빈 값으로 유지)
@@ -38,7 +45,7 @@ docker run -d --name amumal --restart unless-stopped -p "${SERVER_PORT}":"${SERV
   -e DB_NAME='${DB_NAME}' \
   -e DB_USERNAME='${DB_USERNAME}' \
   -e DB_PASSWORD='${DB_PASSWORD}' \
-  ${ECR_REPO}:${COMMIT_HASH_VALUE}
+  ${IMAGE_REPO}:${COMMIT_HASH_VALUE}
 
 # 새 컨테이너가 진짜 떴는지 헬스 체크 (최대 30초 동안)
 # TODO: 컨테이너 뜨는데 보통 얼마나 걸리는지 확인 후 '30초' 값 수정
