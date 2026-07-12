@@ -32,7 +32,8 @@ docker pull ${IMAGE_REPO}:${COMMIT_HASH_VALUE}
 # 롤백 대비 - 현재 떠 있는 컨테이너가 어떤 이미지인지 미리 기억해두기
 # (최초 배포라 기존 컨테이너가 없으면 PREV_IMAGE는 빈 값으로 유지)
 PREV_IMAGE=""
-if [ -n "$(docker ps -aq -f name=amumal)" ]; then
+# name 필터는 부분 일치라 뒤이은 inspect/stop/rm(정확히 "amumal")과 타겟 대상이 있으니 일치 시키기
+if [ -n "$(docker ps -aq -f name='^/amumal$')" ]; then
   PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' amumal)
   docker stop amumal
   docker rm amumal
