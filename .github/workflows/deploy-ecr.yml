@@ -29,6 +29,7 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME }}
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      PORT: ${{ secrets.PORT }}
 
     steps:
       - name: Configure AWS credentials
@@ -47,27 +48,25 @@ jobs:
       - name: Send deploy command via SSM
         id: send-command
         run: |
+          # ECR 레지스트리 주소 추출
           ECR_REGISTRY="${ECR_REPO%%/*}"
-          
-          DEPLOY_SCRIPT=$(cat <<EOF
-          set -e
-          aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-          docker pull ${ECR_REPO}:${COMMIT_HASH_VALUE}
-          docker stop amumal || true
-          docker rm amumal || true
-          docker run -d --name amumal --restart unless-stopped -p 3000:3000 \
-            -e DB_HOST='${DB_HOST}' \
-            -e DB_PORT='${DB_PORT}' \
-            -e DB_NAME='${DB_NAME}' \
-            -e DB_USERNAME='${DB_USERNAME}' \
-            -e DB_PASSWORD='${DB_PASSWORD}' \
-            ${ECR_REPO}:${COMMIT_HASH_VALUE}
-          docker image prune -f
-          EOF
-          )
-          
+
+          # ECR 로그인 명령 생성
+          LOGIN_STEP="aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+
+          # 배포 스크립트에 환경변수 주입
+          DEPLOY_BODY=$(envsubst '$DB_HOST $DB_PORT $DB_NAME $DB_USERNAME $DB_PASSWORD $ECR_REPO $COMMIT_HASH_VALUE $PORT' \
+            < .github/scripts/remote/docker-deploy.sh)
+
+          # 원격 실행 스크립트 생성
+          DEPLOY_SCRIPT="set -e
+          ${LOGIN_STEP}
+          ${DEPLOY_BODY}"
+
+          # SSM은 명령어를 문자열 파라미터로 받기 때문에 줄바꿈/따옴표가 섞인 스크립트를 그대로 보내면 깨지기 때문에 base64로 한 줄짜리 문자열로 인코딩해서 전달
           ENCODED_SCRIPT=$(printf '%s' "$DEPLOY_SCRIPT" | base64 | tr -d '\n')
-          
+
+          # EC2에 배포 명령 전송
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
@@ -75,7 +74,8 @@ jobs:
             --parameters commands="echo $ENCODED_SCRIPT | base64 -d | bash" \
             --query "Command.CommandId" \
             --output text)
-          
+
+          # 다음 스텝에서 이 커맨드의 아이디를 사용하므로 출력값으로 저장
           echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
 
       - name: Wait for command to finish
