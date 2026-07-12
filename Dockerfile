@@ -1,26 +1,32 @@
-FROM amazoncorretto:21 AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
 COPY gradlew gradlew
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
-#COPY global-bundle.pem global-bundle.pem
 
 RUN chmod +x ./gradlew
-RUN ./gradlew dependencies || true
+
+# 의존성 다운로드 (캐시 있으면 재사용)
+RUN --mount=type=cache,target=/root/.gradle ./gradlew dependencies
 
 COPY src src
 
-RUN ./gradlew clean build -x test
+# CI, CD 단계 모두에서 테스트를 실행하였으므로 생략
+RUN --mount=type=cache,target=/root/.gradle ./gradlew clean build -x test
 
-
-FROM amazoncorretto:21-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/build/libs/amumal-0.0.1-SNAPSHOT.jar app.jar
-#COPY --from=builder /app/global-bundle.pem global-bundle.pem
+RUN addgroup -S spring && adduser -S spring -G spring
+
+ # 소유권 지정하며 파일 복사
+COPY --from=builder --chown=spring:spring /app/build/libs/*.jar app.jar
+
+# 사용자 지정
+USER spring
 
 EXPOSE 3000
 ENTRYPOINT ["java", "-jar", "app.jar"]
