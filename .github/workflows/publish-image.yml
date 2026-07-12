@@ -14,7 +14,7 @@ permissions: # GITHUB_TOKEN을 사용하여 권한 제어
 jobs:
   Upload:
     name: Push Docker Image from Workflow Artifact to GHCR
-    #    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-26.04
 
     env:
