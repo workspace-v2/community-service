@@ -11,4 +11,19 @@ public class HealthController {
   public ApiResponse<String> health() {
     return ApiResponse.of("ok", "ok");
   }
+
+  @GetMapping("/health/startup")
+  public ApiResponse<String> startup() {
+    return ApiResponse.of("ok", "ok");
+  }
+
+  @GetMapping("/health/readiness")
+  public ApiResponse<String> readiness() {
+    return ApiResponse.of("ok", "ok");
+  }
+
+  @GetMapping("/health/liveness")
+  public ApiResponse<String> liveness() {
+    return ApiResponse.of("ok", "ok");
+  }
 }

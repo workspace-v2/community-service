@@ -18,6 +18,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private static final String[] WHITE_LIST = {
     "/v1/health",
+    "/v1/health/*",
     "/v1/auth/login",
     "/v1/auth/signup",
     "/v1/auth/refresh-tokens",
