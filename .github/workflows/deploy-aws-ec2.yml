@@ -1,11 +1,7 @@
-name: Deploy Docker Image from GHCR
+name: [ DEPRECATED ] Deploy Docker Image from GHCR
 
 on:
-  workflow_run:
-    workflows: [ "Push Docker Image to GHCR" ]
-    types:
-      - completed
-  workflow_dispatch:
+  workflow_dispatch: # ArgoCD 배포로 전환, 수동 실행만 허용
 
 permissions:
   contents: read
@@ -14,8 +10,6 @@ permissions:
 jobs:
   Deploy:
     name: Deploy via SSM
-    # workflow_dispatch(수동)면 바로 진행, workflow_run(자동)이면 publish가 main에서 성공했을 때만 진행
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-26.04
 
     env:
@@ -29,6 +23,10 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }} # 나중에 packages:read 권한만 있는 토큰으로 변경
 
     steps:
+      - name: Deprecated workflow warning
+        run: |
+          echo "::warning title=Deprecated Workflow::이 워크플로는 레거시 EC2 배포용입니다. deploy-with-argocd.yml을 사용하세요."
+
       # 러너는 빈 워크스페이스로 시작하므로, 이 저장소를 clone해서 받아오기 위해 추가
       - name: Checkout repository
         uses: actions/checkout@v4
