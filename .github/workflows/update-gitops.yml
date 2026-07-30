@@ -23,8 +23,8 @@ env:
   GITOPS_BRANCH: ${{ vars.GITOPS_BRANCH }}
   GITOPS_VALUES_FILE: ${{ vars.GITOPS_VALUES_FILE }}
 
-  GIT_USER_NAME: ${{ vars.GIT_USER_NAME }}
-  GIT_USER_EMAIL: ${{ vars.GIT_USER_EMAIL }}
+  GIT_USER_NAME: github-actions[bot]
+  GIT_USER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
   update-gitops:
