@@ -1,4 +1,4 @@
-name: [ DEPRECATED ] Deploy Docker Image from GHCR
+name: "[DEPRECATED] Deploy Docker Image from GHCR"
 
 on:
   workflow_dispatch: # ArgoCD 배포로 전환, 수동 실행만 허용
