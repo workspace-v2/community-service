@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 개인 로컬 오버라이드
+application-local.yml
+application-local.yaml
+application-local.properties
