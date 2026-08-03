@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 @EnableCaching
 public class CacheConfig {
 
-  public static final String CACHE_LIKE_COUNT = "likeCounts";
   public static final String CACHE_VIEW_COUNT = "viewCounts";
   public static final String CACHE_AUTH_TOKEN = "authTokens";
 
@@ -22,9 +21,6 @@ public class CacheConfig {
     SimpleCacheManager cacheManager = new SimpleCacheManager();
     cacheManager.setCaches(
         List.of(
-            // 좋아요 수 (만료 없음)
-            buildCache(CACHE_LIKE_COUNT, Caffeine.newBuilder().maximumSize(10_000)),
-
             // 조회수 (만료 없음)
             buildCache(CACHE_VIEW_COUNT, Caffeine.newBuilder().maximumSize(10_000)),
 

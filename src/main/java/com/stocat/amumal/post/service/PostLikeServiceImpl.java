@@ -1,6 +1,5 @@
 package com.stocat.amumal.post.service;
 
-import com.stocat.amumal.common.config.CacheConfig;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.post.domain.Post;
@@ -12,8 +11,6 @@ import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +21,6 @@ public class PostLikeServiceImpl implements PostLikeService {
   private final PostRepository postRepository;
   private final PostLikeRepository postLikeRepository;
   private final UserRepository userRepository;
-  private final CacheManager cacheManager;
 
   @Override
   @Transactional
@@ -48,21 +44,9 @@ public class PostLikeServiceImpl implements PostLikeService {
     }
 
     postLikeRepository.save(PostLike.of(post, user));
+    post.increaseLikeCount();
 
-    // 게시글 좋아요 수 캐시 확인
-    Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
-    Cache.ValueWrapper wrapper = cache.get(postId);
-
-    // 캐시가 이미 존재하면 해당 값에서 +1, 없으면 DB에 저장된 값을 가져옴
-    int newCount =
-        wrapper != null
-            ? (int) wrapper.get() + 1
-            : (int) postLikeRepository.countById_PostId(postId);
-
-    // 캐시값 업데이트
-    cache.put(postId, newCount);
-
-    return new PostLikeResponse(post.getId(), newCount);
+    return new PostLikeResponse(post.getId(), post.getLikeCount());
   }
 
   @Override
@@ -84,16 +68,8 @@ public class PostLikeServiceImpl implements PostLikeService {
     }
 
     postLikeRepository.deleteById(likeId);
+    post.decreaseLikeCount();
 
-    // 캐시가 이미 존재하면 해당 값에서 -1, 없으면 DB에 저장된 값을 가져옴
-    Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
-    Cache.ValueWrapper wrapper = cache.get(postId);
-    int newCount =
-        wrapper != null
-            ? Math.max(0, (int) wrapper.get() - 1)
-            : (int) postLikeRepository.countById_PostId(postId);
-    cache.put(postId, newCount);
-
-    return new PostLikeResponse(post.getId(), newCount);
+    return new PostLikeResponse(post.getId(), post.getLikeCount());
   }
 }

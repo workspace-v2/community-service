@@ -1,7 +1,6 @@
 package com.stocat.amumal.post.service;
 
 import com.stocat.amumal.common.DateTimeConstants;
-import com.stocat.amumal.common.config.CacheConfig;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.post.domain.Post;
@@ -35,22 +34,11 @@ public class PostServiceImpl implements PostService {
 
   // 캐시에 누적된 delta와 DB 저장값을 합산해 반환
   private int getViewCount(Post post) {
-    Cache cache = cacheManager.getCache(CacheConfig.CACHE_VIEW_COUNT);
+    Cache cache =
+        cacheManager.getCache(com.stocat.amumal.common.config.CacheConfig.CACHE_VIEW_COUNT);
     Cache.ValueWrapper wrapper = cache.get(post.getId());
     int delta = wrapper != null ? (int) wrapper.get() : 0;
     return post.getViewCount() + delta;
-  }
-
-  // 캐시 hit 시 캐시 값 반환, miss 시 post_like 테이블 COUNT로 복원 후 캐시에 올림 (read-through)
-  private int getCachedLikeCount(Long postId) {
-    Cache cache = cacheManager.getCache(CacheConfig.CACHE_LIKE_COUNT);
-    Cache.ValueWrapper wrapper = cache.get(postId);
-    if (wrapper != null) {
-      return (int) wrapper.get();
-    }
-    int count = (int) postLikeRepository.countById_PostId(postId);
-    cache.put(postId, count);
-    return count;
   }
 
   @Override
@@ -98,7 +86,7 @@ public class PostServiceImpl implements PostService {
         post.getUser().getProfileImageUrl(),
         post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
         getViewCount(post),
-        getCachedLikeCount(postId),
+        post.getLikeCount(),
         post.getCommentCount(),
         isLiked,
         post.getImageUrl());
@@ -124,7 +112,7 @@ public class PostServiceImpl implements PostService {
         post.getId(),
         post.getTitle(),
         post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
-        getCachedLikeCount(post.getId()),
+        post.getLikeCount(),
         post.getCommentCount(),
         getViewCount(post),
         new PostSummaryResponse.AuthorResponse(

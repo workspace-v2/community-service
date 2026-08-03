@@ -43,6 +43,9 @@ public class Post extends BaseEntity {
   private int commentCount = 0;
 
   @Column(nullable = false)
+  private int likeCount = 0;
+
+  @Column(nullable = false)
   private int viewCount = 0;
 
   public static Post of(User user, String title, String content, String imageUrl) {
@@ -66,5 +69,13 @@ public class Post extends BaseEntity {
 
   public void decreaseCommentCount() {
     this.commentCount = Math.max(0, this.commentCount - 1);
+  }
+
+  public void increaseLikeCount() {
+    this.likeCount += 1;
+  }
+
+  public void decreaseLikeCount() {
+    this.likeCount = Math.max(0, this.likeCount - 1);
   }
 }
