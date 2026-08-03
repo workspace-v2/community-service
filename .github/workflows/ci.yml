@@ -54,11 +54,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew                # Gradle wrapper 파일 실행 권한 부여
 
-      - name: Build with Gradle
-        run: ./gradlew build                # Gradle build를 수행 (문법 오류 검사 / 테스트 / 빌드 산출물 생성)
-
       - name: Check code format with Spotless
         run: ./gradlew spotlessCheck         # 코드 스타일 검사: 들여쓰기, 줄바꿈, import 정리 등
+
+      - name: Build with Gradle
+        run: ./gradlew build                # Gradle build를 수행 (문법 오류 검사 / 테스트 / 빌드 산출물 생성)
 
       #      - name: Check dependency vulnerabilities
       #        run: ./gradlew dependencyCheckAnalyze            # 의존성 취약점 검사
