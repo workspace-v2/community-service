@@ -24,6 +24,9 @@ public class PostQuerydslService {
   public List<Post> findAllByCursor(Long cursor, int size) {
     return queryFactory
         .selectFrom(post)
+        // 목록 응답에서 작성자 정보를 바로 사용하므로 N+1을 막기 위해 함께 조회한다.
+        .join(post.user)
+        .fetchJoin()
         .where(cursorLt(cursor))
         .orderBy(post.id.desc())
         .limit(size)
@@ -33,6 +36,9 @@ public class PostQuerydslService {
   public List<Post> findAllByOffset(long offset, long limit) {
     return queryFactory
         .selectFrom(post)
+        // PostSummaryResponse 매핑 시 post.user 접근이 발생하므로 fetch join을 유지한다.
+        .join(post.user)
+        .fetchJoin()
         .orderBy(post.id.desc())
         .offset(offset)
         .limit(limit)
@@ -43,6 +49,9 @@ public class PostQuerydslService {
     JPAQuery<Post> query =
         queryFactory
             .selectFrom(post)
+            // 검색 결과도 동일한 DTO 매핑을 사용하므로 작성자를 함께 조회한다.
+            .join(post.user)
+            .fetchJoin()
             // 검색 조건에 맞는 게시글 집합을 먼저 만든 뒤, 그 결과에 offset/limit를 적용
             .where(keywordContains(keyword))
             .offset(offset)
