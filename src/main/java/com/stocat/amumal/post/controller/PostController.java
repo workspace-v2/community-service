@@ -6,6 +6,7 @@ import com.stocat.amumal.image.dto.PostFileUploadResponse;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
+import com.stocat.amumal.post.dto.PostCursorSliceResponse;
 import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
@@ -57,6 +58,15 @@ public class PostController {
       @RequestParam(value = "offset", defaultValue = "0") int offset,
       @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
     return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPosts(offset, limit));
+  }
+
+  @GetMapping("/cursor")
+  @ResponseStatus(HttpStatus.OK)
+  public ApiResponse<PostCursorSliceResponse> getPostsByCursor(
+      @RequestParam(value = "cursor", required = false) Long cursor,
+      @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
+    return ApiResponse.of(
+        "게시글 목록 조회에 성공했습니다.", postService.getPostsByCursor(cursor, limit));
   }
 
   @GetMapping("/search")

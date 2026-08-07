@@ -6,6 +6,7 @@ import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.domain.PostLikeId;
 import com.stocat.amumal.post.dto.GetPostResponse;
+import com.stocat.amumal.post.dto.PostCursorSliceResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.event.PostViewEventPublisher;
@@ -49,6 +50,20 @@ public class PostServiceImpl implements PostService {
     return postQuerydslService.findAllByOffset(offset, limit).stream()
         .map(this::toPostSummaryResponse)
         .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public PostCursorSliceResponse getPostsByCursor(Long cursor, int limit) {
+    postValidator.validateListSize(limit);
+
+    List<Post> posts = postQuerydslService.findAllByCursor(cursor, limit + 1);
+    boolean hasNext = posts.size() > limit;
+    List<Post> pagePosts = hasNext ? posts.subList(0, limit) : posts;
+    Long nextCursor = hasNext ? pagePosts.getLast().getId() : null;
+
+    return new PostCursorSliceResponse(
+        pagePosts.stream().map(this::toPostSummaryResponse).toList(), nextCursor, hasNext);
   }
 
   @Override
