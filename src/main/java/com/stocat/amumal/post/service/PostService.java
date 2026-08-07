@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface PostService {
 
-    List<PostSummaryResponse> getPosts(int offset, int limit);
+    List<PostSummaryResponse> getPostsByOffset(int offset, int limit);
 
     PostCursorSliceResponse getPostsByCursor(Long cursor, int limit);
 

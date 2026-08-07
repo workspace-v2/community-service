@@ -57,7 +57,7 @@ public class PostController {
     public ApiResponse<List<PostSummaryResponse>> getPosts(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
-        return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPosts(offset, limit));
+        return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPostsByOffset(offset, limit));
     }
 
     @GetMapping("/cursor")

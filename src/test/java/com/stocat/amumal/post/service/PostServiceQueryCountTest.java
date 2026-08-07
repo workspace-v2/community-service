@@ -35,7 +35,7 @@ class PostServiceQueryCountTest {
 
     @Test
     @DisplayName("게시글 목록 조회는 작성자 정보를 조회한다")
-    void getPostsFetchesAuthorsInSingleQuery() {
+    void getPostsByOffsetFetchesAuthorsInSingleQuery() {
         for (int i = 1; i <= 10; i++) {
             User user =
                     userRepository.save(
@@ -53,13 +53,13 @@ class PostServiceQueryCountTest {
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
-        postService.getPosts(0, 10);
+        postService.getPostsByOffset(0, 10);
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1L);
     }
 
     @Test
     @DisplayName("커서 기반 게시글 목록 조회도 작성자 정보를 조회한다")
-    void getPostsByOffsetByCursorFetchesAuthorsInSingleQuery() {
+    void getPostsByOffsetByOffsetByCursorFetchesAuthorsInSingleQuery() {
         for (int i = 1; i <= 10; i++) {
             User user =
                     userRepository.save(

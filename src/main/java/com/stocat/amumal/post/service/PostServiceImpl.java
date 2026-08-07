@@ -44,7 +44,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PostSummaryResponse> getPosts(int offset, int limit) {
+    public List<PostSummaryResponse> getPostsByOffset(int offset, int limit) {
         postValidator.validateListSize(limit);
 
         return postQuerydslService.findAllByOffset(offset, limit).stream()
