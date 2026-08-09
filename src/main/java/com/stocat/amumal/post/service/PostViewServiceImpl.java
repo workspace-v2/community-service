@@ -65,8 +65,9 @@ public class PostViewServiceImpl implements PostViewService {
         try {
           dirtyPostIds.add(Long.parseLong(dirtyPostId));
         } catch (NumberFormatException exception) {
-          // 잘못된 값 하나 때문에 배치 전체가 중단되지 않도록 건너뛴다.
-          log.warn("Skipping invalid post id in dirty set: {}", dirtyPostId, exception);
+          // 잘못된 값이 반복 처리되지 않도록 dirty set에서 함께 제거
+          log.warn("Removing invalid post id from dirty set: {}", dirtyPostId, exception);
+          stringRedisTemplate.opsForSet().remove(VIEW_COUNT_DIRTY_KEY, dirtyPostId);
         }
       }
     }
