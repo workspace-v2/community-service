@@ -51,7 +51,8 @@ class PostCursorPaginationIntegrationTest {
     assertThat(firstPage.content()).hasSize(10);
     assertThat(firstPage.hasNext()).isTrue();
     assertThat(firstPage.nextCursor()).isEqualTo(firstPage.content().getLast().id());
-    assertThat(extractIds(firstPage.content())).containsExactlyElementsOf(expectedIds.subList(0, 10));
+    assertThat(extractIds(firstPage.content()))
+        .containsExactlyElementsOf(expectedIds.subList(0, 10));
     assertSortedDescending(firstPage.content());
 
     PostCursorSliceResponse secondPage = postService.getPostsByCursor(firstPage.nextCursor(), 10);
@@ -60,7 +61,8 @@ class PostCursorPaginationIntegrationTest {
     assertThat(secondPage.nextCursor()).isEqualTo(secondPage.content().getLast().id());
     assertThat(extractIds(secondPage.content()))
         .containsExactlyElementsOf(expectedIds.subList(10, 20));
-    assertThat(extractIds(firstPage.content())).doesNotContainAnyElementsOf(extractIds(secondPage.content()));
+    assertThat(extractIds(firstPage.content()))
+        .doesNotContainAnyElementsOf(extractIds(secondPage.content()));
     assertSortedDescending(secondPage.content());
 
     PostCursorSliceResponse thirdPage = postService.getPostsByCursor(secondPage.nextCursor(), 10);
@@ -69,7 +71,8 @@ class PostCursorPaginationIntegrationTest {
     assertThat(thirdPage.nextCursor()).isNull();
     assertThat(extractIds(thirdPage.content()))
         .containsExactlyElementsOf(expectedIds.subList(20, 25));
-    assertThat(extractIds(secondPage.content())).doesNotContainAnyElementsOf(extractIds(thirdPage.content()));
+    assertThat(extractIds(secondPage.content()))
+        .doesNotContainAnyElementsOf(extractIds(thirdPage.content()));
     assertSortedDescending(thirdPage.content());
 
     List<Long> actualIds = new ArrayList<>();
