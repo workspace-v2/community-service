@@ -6,7 +6,7 @@ public record PostSummaryResponse(
     String createdAt,
     int likeCount,
     int commentCount,
-    int viewCount,
+    long viewCount,
     AuthorResponse author) {
   public record AuthorResponse(Long userId, String nickname, String profileImageUrl) {}
 }

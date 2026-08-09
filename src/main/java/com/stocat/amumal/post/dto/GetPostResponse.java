@@ -11,7 +11,7 @@ public record GetPostResponse(
     String nickname,
     String profileImage,
     String createdAt,
-    int viewCount,
+    long viewCount,
     int likeCount,
     int commentCount,
     boolean isLiked,
