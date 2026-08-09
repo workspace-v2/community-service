@@ -13,6 +13,6 @@ public class PostViewEventListener {
 
   @EventListener
   public void handle(PostViewedEvent event) {
-    postViewService.incrementViewCountCache(event.postId());
+    postViewService.incrementViewCount(event.postId());
   }
 }

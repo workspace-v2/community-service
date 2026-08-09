@@ -16,8 +16,6 @@ import com.stocat.amumal.post.validator.PostValidator;
 import com.stocat.amumal.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,16 +28,12 @@ public class PostServiceImpl implements PostService {
   private final PostQuerydslService postQuerydslService;
   private final UserRepository userRepository;
   private final PostValidator postValidator;
-  private final CacheManager cacheManager;
+  private final PostViewService postViewService;
   private final PostViewEventPublisher postViewEventPublisher;
 
-  // 캐시에 누적된 delta와 DB 저장값을 합산해 반환
-  private int getViewCount(Post post) {
-    Cache cache =
-        cacheManager.getCache(com.stocat.amumal.common.config.CacheConfig.CACHE_VIEW_COUNT);
-    Cache.ValueWrapper wrapper = cache.get(post.getId());
-    int delta = wrapper != null ? (int) wrapper.get() : 0;
-    return post.getViewCount() + delta;
+  // DB 기준 조회수에 Redis delta를 더해 현재 표시값을 계산
+  private long getViewCount(Post post) {
+    return post.getViewCount() + postViewService.getViewCountDelta(post.getId());
   }
 
   @Override

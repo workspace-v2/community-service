@@ -2,5 +2,7 @@ package com.stocat.amumal.post.service;
 
 public interface PostViewService {
 
-  void incrementViewCountCache(Long postId);
+  void incrementViewCount(Long postId);
+
+  long getViewCountDelta(Long postId);
 }
