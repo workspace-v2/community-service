@@ -2,8 +2,8 @@ package com.stocat.amumal.post.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,7 +32,8 @@ class PostViewFlushServiceUnitTest {
   @BeforeEach
   void setUp() {
     postViewService = new TestPostViewService();
-    postViewFlushService = new PostViewFlushService(postViewService, postRepository, transactionTemplate);
+    postViewFlushService =
+        new PostViewFlushService(postViewService, postRepository, transactionTemplate);
 
     lenient()
         .doAnswer(invocation -> executeWithTransactionSynchronization(invocation.getArgument(0)))
@@ -65,9 +66,7 @@ class PostViewFlushServiceUnitTest {
   void flushDirtyPostViewCountsKeepsDeltaWhenCommitFails() {
     postViewService.incrementViewCount(1L);
     when(postRepository.incrementViewCount(1L, 1L)).thenReturn(1);
-    doAnswer(
-            invocation ->
-                executeWithTransactionSynchronization(invocation.getArgument(0), true))
+    doAnswer(invocation -> executeWithTransactionSynchronization(invocation.getArgument(0), true))
         .when(transactionTemplate)
         .execute(any());
 
