@@ -47,10 +47,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // 액세스 토큰 발급
-    String accessToken =
-        jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
+    String accessToken = jwtProvider.createAccessToken(user.getId());
 
-    // 리프레시 토큰 발급 후 DB 저장
+    // 리프레시 토큰 발급 후 저장
     String refreshTokenValue = jwtProvider.createRefreshToken(user.getId());
     refreshTokenStore.deleteByUserId(user.getId());
     refreshTokenStore.save(
@@ -73,6 +72,12 @@ public class AuthServiceImpl implements AuthService {
       throw new ApiException(ErrorCode.INVALID_TOKEN);
     }
 
+    // refresh API는 서명·만료 검증을 통과한 refresh token만 허용
+    jwtProvider.parse(refreshToken);
+    if (!jwtProvider.isRefreshToken(refreshToken)) {
+      throw new ApiException(ErrorCode.INVALID_TOKEN);
+    }
+
     // 저장소에서 토큰 조회 → 없으면 탈취 또는 미발급
     RefreshTokenEntry saved =
         refreshTokenStore
@@ -85,13 +90,12 @@ public class AuthServiceImpl implements AuthService {
       throw new ApiException(ErrorCode.INVALID_TOKEN);
     }
 
-    // 새 액세스 토큰 발급
+    // 저장된 refresh token의 소유자를 기준으로 access token을 다시 발급
     User user =
         userRepository
             .findById(saved.userId())
             .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TOKEN));
-    String newAccessToken =
-        jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
+    String newAccessToken = jwtProvider.createAccessToken(user.getId());
 
     // RTR: 기존 리프레시 토큰 폐기 후 새 토큰 발급·저장
     String newRefreshTokenValue = jwtProvider.createRefreshToken(user.getId());
