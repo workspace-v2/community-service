@@ -83,13 +83,14 @@ public class PostController {
   @GetMapping("/search")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<List<PostSummaryResponse>> searchPosts(
+      @RequestParam(value = "symbol", required = false) String symbol,
       @RequestParam("keyword") String keyword,
       @RequestParam(value = "offset", defaultValue = "0") int offset,
       @Positive @RequestParam(value = "limit", defaultValue = "10") int limit,
       @RequestParam(value = "sort", defaultValue = "recent") String sort) {
     PostSearchSort searchSort = PostSearchSort.from(sort);
     return ApiResponse.of(
-        "게시글 검색에 성공했습니다.", postService.searchPosts(keyword, offset, limit, searchSort));
+        "게시글 검색에 성공했습니다.", postService.searchPosts(symbol, keyword, offset, limit, searchSort));
   }
 
   @GetMapping("/{post_id}")

@@ -12,7 +12,8 @@ public interface PostService {
 
   PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit);
 
-  List<PostSummaryResponse> searchPosts(String keyword, int offset, int limit, PostSearchSort sort);
+  List<PostSummaryResponse> searchPosts(
+      String symbol, String keyword, int offset, int limit, PostSearchSort sort);
 
   GetPostResponse getPost(Long postId, Long userId);
 

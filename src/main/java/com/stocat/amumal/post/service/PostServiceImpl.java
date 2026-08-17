@@ -64,10 +64,11 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(readOnly = true)
   public List<PostSummaryResponse> searchPosts(
-      String keyword, int offset, int limit, PostSearchSort sort) {
+      String symbol, String keyword, int offset, int limit, PostSearchSort sort) {
     postValidator.validateListSize(limit);
 
-    return toPostSummaryResponses(postQuerydslService.searchPosts(keyword, offset, limit, sort));
+    return toPostSummaryResponses(
+        postQuerydslService.searchPosts(symbol, keyword, offset, limit, sort));
   }
 
   @Override

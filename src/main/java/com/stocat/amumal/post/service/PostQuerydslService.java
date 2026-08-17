@@ -27,7 +27,8 @@ public class PostQuerydslService {
     return basePostListQuery(symbol).where(postIdLt(cursor)).limit(limit).fetch();
   }
 
-  public List<Post> searchPosts(String keyword, long offset, long limit, PostSearchSort sort) {
+  public List<Post> searchPosts(
+      String symbol, String keyword, long offset, long limit, PostSearchSort sort) {
     JPAQuery<Post> query =
         queryFactory
             .selectFrom(post)
@@ -35,7 +36,7 @@ public class PostQuerydslService {
             .join(post.user)
             .fetchJoin()
             // 검색 조건에 맞는 게시글 집합을 먼저 만든 뒤, 그 결과에 offset/limit를 적용
-            .where(keywordContains(keyword))
+            .where(symbolEq(symbol), keywordContains(keyword))
             .offset(offset)
             .limit(limit);
 

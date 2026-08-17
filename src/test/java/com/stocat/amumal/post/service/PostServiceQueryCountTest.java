@@ -104,9 +104,38 @@ class PostServiceQueryCountTest {
     Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
     statistics.clear();
 
-    postService.searchPosts("keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
+    postService.searchPosts(
+        null, "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
 
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(2L);
+  }
+
+  @Test
+  @DisplayName("게시글 검색은 종목 필터가 있으면 해당 종목 글만 조회한다")
+  void searchPostsFiltersBySymbol() {
+    stockSnapshotRepository.save(activeStock("035420", "NAVER"));
+    stockSnapshotRepository.save(activeStock("035720", "카카오"));
+
+    User user =
+        userRepository.save(
+            User.of(
+                "symbol-search-writer@stocat.com",
+                "Password1!",
+                "symsearch",
+                "https://example.com"));
+    postRepository.save(Post.of(user, "035420", "keyword naver", "keyword content", null));
+    postRepository.save(Post.of(user, "035720", "keyword kakao", "keyword content", null));
+
+    entityManager.flush();
+    entityManager.clear();
+
+    var results =
+        postService.searchPosts(
+            "035420", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
+
+    assertThat(results).hasSize(1);
+    assertThat(results.getFirst().symbol()).isEqualTo("035420");
+    assertThat(results.getFirst().title()).isEqualTo("keyword naver");
   }
 
   private StockSnapshot activeStock(String symbol, String name) {
