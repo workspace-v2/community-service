@@ -17,6 +17,7 @@ import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.validator.UserValidator;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
   private final RefreshTokenStore refreshTokenStore;
   private final JwtProvider jwtProvider;
   private final UserValidator userValidator;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   @Transactional
@@ -40,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
             .findByEmail(request.email().trim())
             .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
 
-    if (!user.getPassword().equals(request.password())) {
+    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
       throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
     }
 

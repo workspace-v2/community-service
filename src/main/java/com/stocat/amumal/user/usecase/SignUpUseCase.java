@@ -9,6 +9,7 @@ import com.stocat.amumal.user.repository.UserRepository;
 import com.stocat.amumal.user.service.UserImageMappingService;
 import com.stocat.amumal.user.validator.UserValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class SignUpUseCase {
   private final UserRepository userRepository;
   private final UserValidator userValidator;
   private final UserImageMappingService userImageMappingService;
+  private final PasswordEncoder passwordEncoder;
 
   @Transactional
   public SignUpResponse execute(SignUpRequest request) {
@@ -36,7 +38,7 @@ public class SignUpUseCase {
         userRepository.save(
             User.of(
                 request.email().trim(),
-                request.password(),
+                passwordEncoder.encode(request.password()),
                 request.nickname().trim(),
                 request.profileImage() == null ? null : request.profileImage().trim()));
 

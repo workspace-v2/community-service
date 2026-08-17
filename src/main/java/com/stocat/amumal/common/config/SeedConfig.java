@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 @Configuration
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SeedConfig {
 
   private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
   @Value("${app.seed.test-user-count:20}")
   private int testUserCount;
@@ -49,7 +51,11 @@ public class SeedConfig {
         .forEach(
             i -> {
               User user =
-                  User.of("tester" + i + "@stocat.com", testUserPassword, "tester" + i, null);
+                  User.of(
+                      "tester" + i + "@stocat.com",
+                      passwordEncoder.encode(testUserPassword),
+                      "tester" + i,
+                      null);
               userRepository.save(user);
             });
   }
