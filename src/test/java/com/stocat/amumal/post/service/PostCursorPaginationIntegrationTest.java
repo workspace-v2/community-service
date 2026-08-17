@@ -137,14 +137,16 @@ class PostCursorPaginationIntegrationTest {
     stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
 
     for (int i = 1; i <= 11; i++) {
-      postRepository.save(Post.of(user, "005930", "keyword title " + i, "keyword content " + i, null));
+      postRepository.save(
+          Post.of(user, "005930", "keyword title " + i, "keyword content " + i, null));
     }
 
     entityManager.flush();
     entityManager.clear();
 
     PostSearchSliceResponse response =
-        postService.searchPosts("005930", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
+        postService.searchPosts(
+            "005930", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
 
     assertThat(response.content()).hasSize(10);
     assertThat(response.offset()).isEqualTo(0);

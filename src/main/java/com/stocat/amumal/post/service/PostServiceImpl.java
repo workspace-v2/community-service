@@ -78,8 +78,7 @@ public class PostServiceImpl implements PostService {
     boolean hasNext = posts.size() > limit;
     List<Post> pagePosts = hasNext ? posts.subList(0, limit) : posts;
 
-    return new PostSearchSliceResponse(
-        toPostSummaryResponses(pagePosts), offset, limit, hasNext);
+    return new PostSearchSliceResponse(toPostSummaryResponses(pagePosts), offset, limit, hasNext);
   }
 
   @Override
