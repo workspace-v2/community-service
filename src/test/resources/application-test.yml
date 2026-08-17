@@ -10,6 +10,9 @@ spring:
       host: localhost
       port: 6379
 
+  cache:
+    type: simple # 메모리 기반 단순 캐시
+
   jpa:
     hibernate:
       ddl-auto: validate

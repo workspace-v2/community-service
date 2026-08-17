@@ -38,6 +38,9 @@ spring:
     active: development
     include: local # 개발자 개인 로컬 오버라이드를 활성 프로필과 무관하게 항상 덮어쓴다.
 
+  cache:
+    type: redis # Redis/Valkey를 캐시 저장소로 사용
+
 app:
   upload:
     base-dir: ./uploads

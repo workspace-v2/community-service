@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 class PostServiceQueryCountTest {
 
   @Autowired private PostService postService;
-  @Autowired    private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
   @Autowired private PostRepository postRepository;
   @Autowired private EntityManager entityManager;
   @Autowired private EntityManagerFactory entityManagerFactory;
