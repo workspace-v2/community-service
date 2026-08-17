@@ -28,17 +28,18 @@ public class StockController {
 
   @GetMapping("/{symbol}")
   @ResponseStatus(HttpStatus.OK)
-  public ApiResponse<StockQuerySummaryResponse> getStock(
+  public ApiResponse<StockQuerySummaryResponse> getStockBySymbol(
       @PathVariable("symbol") @Pattern(regexp = "\\d{6}") String symbol) {
-    return ApiResponse.of("종목 조회에 성공했습니다.", stockQueryService.getStock(symbol));
+    return ApiResponse.of("종목 조회에 성공했습니다.", stockQueryService.findStockBySymbol(symbol));
   }
 
   @GetMapping
   @ResponseStatus(HttpStatus.OK)
-  public ApiResponse<StockQueryResponse> getStocks(
+  public ApiResponse<StockQueryResponse> searchStocks(
       @Valid @ModelAttribute StockQueryRequest request) {
     return ApiResponse.of(
         "종목 조회에 성공했습니다.",
-        stockQueryService.getStocks(request.getSymbol(), request.getName(), request.getLimit()));
+        stockQueryService.searchStocks(
+            request.getSymbol(), request.getName(), request.getLimit()));
   }
 }

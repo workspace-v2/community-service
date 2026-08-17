@@ -21,7 +21,7 @@ public class StockQueryService {
   private final StockSnapshotRepository stockSnapshotRepository;
 
   /** 선택된 종목 symbol 하나를 다시 읽어와 표시할 때 사용한다. */
-  public StockQuerySummaryResponse getStock(String symbol) {
+  public StockQuerySummaryResponse findStockBySymbol(String symbol) {
     String normalizedSymbol = normalize(symbol);
     StockSnapshot stockSnapshot =
         stockSnapshotRepository
@@ -36,7 +36,7 @@ public class StockQueryService {
    * <p>symbol은 정확 일치, name은 포함 검색 기준으로 조회한다. symbol과 name을 함께 주면 symbol exact + name contains의 AND
    * 조건으로 동작한다.
    */
-  public StockQueryResponse getStocks(String symbol, String name, int limit) {
+  public StockQueryResponse searchStocks(String symbol, String name, int limit) {
     List<StockSnapshot> stocks = findStocks(symbol, name, limit + 1);
     boolean hasNext = stocks.size() > limit;
     List<StockQuerySummaryResponse> items =

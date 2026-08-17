@@ -31,7 +31,7 @@ class StockQueryServiceTest {
     when(stockSnapshotRepository.findById("005930"))
         .thenReturn(Optional.of(stock("005930", "삼성전자")));
 
-    StockQuerySummaryResponse response = stockQueryService.getStock("005930");
+    StockQuerySummaryResponse response = stockQueryService.findStockBySymbol("005930");
 
     assertThat(response.symbol()).isEqualTo("005930");
     assertThat(response.name()).isEqualTo("삼성전자");
@@ -41,7 +41,7 @@ class StockQueryServiceTest {
   void 없는_symbol이면_예외를_던진다() {
     when(stockSnapshotRepository.findById("999999")).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> stockQueryService.getStock("999999"))
+    assertThatThrownBy(() -> stockQueryService.findStockBySymbol("999999"))
         .isInstanceOf(ApiException.class)
         .extracting(exception -> ((ApiException) exception).getErrorCode())
         .isEqualTo(ErrorCode.STOCK_NOT_FOUND);
@@ -52,7 +52,7 @@ class StockQueryServiceTest {
     when(stockSnapshotRepository.findById("005930"))
         .thenReturn(Optional.of(stock("005930", "삼성전자")));
 
-    StockQueryResponse response = stockQueryService.getStocks("005930", null, 10);
+    StockQueryResponse response = stockQueryService.searchStocks("005930", null, 10);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.items().get(0).symbol()).isEqualTo("005930");
@@ -65,7 +65,7 @@ class StockQueryServiceTest {
     when(stockSnapshotRepository.findAllByNameContainingIgnoreCase("삼성", Pageable.ofSize(11)))
         .thenReturn(List.of(stock("005930", "삼성전자")));
 
-    StockQueryResponse response = stockQueryService.getStocks(null, "삼성", 10);
+    StockQueryResponse response = stockQueryService.searchStocks(null, "삼성", 10);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.items().get(0).name()).isEqualTo("삼성전자");
@@ -76,7 +76,7 @@ class StockQueryServiceTest {
     when(stockSnapshotRepository.findById("005930"))
         .thenReturn(Optional.of(stock("005930", "삼성전자")));
 
-    StockQueryResponse response = stockQueryService.getStocks("005930", "삼성", 10);
+    StockQueryResponse response = stockQueryService.searchStocks("005930", "삼성", 10);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.items().get(0).symbol()).isEqualTo("005930");
@@ -87,7 +87,7 @@ class StockQueryServiceTest {
     when(stockSnapshotRepository.findAllByNameContainingIgnoreCase("삼성", Pageable.ofSize(2)))
         .thenReturn(List.of(stock("005930", "삼성전자"), stock("005931", "삼성바이오")));
 
-    StockQueryResponse response = stockQueryService.getStocks(null, "삼성", 1);
+    StockQueryResponse response = stockQueryService.searchStocks(null, "삼성", 1);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.hasNext()).isTrue();
