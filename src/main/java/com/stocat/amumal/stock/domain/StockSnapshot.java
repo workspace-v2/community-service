@@ -12,6 +12,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * community가 로컬에서 참조하는 종목 읽기 모델이다.
+ *
+ * <p>원본 종목 마스터는 외부 서비스에 있고, 이 엔티티는 게시글 작성 검증과 종목명 표시를 위한 복제본만 유지한다.
+ */
 @Entity
 @Table(name = "stock_snapshot")
 @Getter
@@ -61,5 +66,27 @@ public class StockSnapshot {
     stockSnapshot.sourceUpdatedAt = sourceUpdatedAt;
     stockSnapshot.syncedAt = syncedAt;
     return stockSnapshot;
+  }
+
+  /**
+   * 원본 종목 마스터에서 받은 최신 상태로 읽기 모델을 덮어쓴다.
+   *
+   * <p>{@code sourceUpdatedAt}은 원본 수정 시각이고, {@code syncedAt}은 community에 반영한 시각이다.
+   */
+  public void updateFrom(
+      String name,
+      String market,
+      StockStatus status,
+      LocalDate listedAt,
+      LocalDate delistedAt,
+      LocalDateTime sourceUpdatedAt,
+      LocalDateTime syncedAt) {
+    this.name = name;
+    this.market = market;
+    this.status = status;
+    this.listedAt = listedAt;
+    this.delistedAt = delistedAt;
+    this.sourceUpdatedAt = sourceUpdatedAt;
+    this.syncedAt = syncedAt;
   }
 }
