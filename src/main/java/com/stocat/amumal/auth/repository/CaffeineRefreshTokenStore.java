@@ -6,9 +6,9 @@ import com.stocat.amumal.auth.TokenConstants;
 import com.stocat.amumal.auth.domain.RefreshTokenEntry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.springframework.stereotype.Component;
 
-@Component
+// Redis 기반 저장소로 전환되어 기본 구현으로는 사용하지 않는다.
+@Deprecated(forRemoval = true)
 public class CaffeineRefreshTokenStore implements RefreshTokenStore {
 
   private final Cache<String, RefreshTokenEntry> cache =
