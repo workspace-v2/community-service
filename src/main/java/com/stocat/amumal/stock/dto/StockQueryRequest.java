@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+/** 게시글 작성용 종목 검색 요청 */
 public class StockQueryRequest {
 
   @Pattern(regexp = "\\d{6}")

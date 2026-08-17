@@ -8,7 +8,6 @@ import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.stock.domain.StockSnapshot;
 import com.stocat.amumal.stock.domain.StockStatus;
-import com.stocat.amumal.stock.dto.StockQueryItemResponse;
 import com.stocat.amumal.stock.dto.StockQueryResponse;
 import com.stocat.amumal.stock.dto.StockQuerySummaryResponse;
 import com.stocat.amumal.stock.repository.StockSnapshotRepository;
@@ -32,7 +31,7 @@ class StockQueryServiceTest {
     when(stockSnapshotRepository.findById("005930"))
         .thenReturn(Optional.of(stock("005930", "삼성전자")));
 
-    StockQueryItemResponse response = stockQueryService.getStock("005930");
+    StockQuerySummaryResponse response = stockQueryService.getStock("005930");
 
     assertThat(response.symbol()).isEqualTo("005930");
     assertThat(response.name()).isEqualTo("삼성전자");

@@ -1,9 +1,9 @@
 package com.stocat.amumal.stock.controller;
 
 import com.stocat.amumal.common.response.ApiResponse;
-import com.stocat.amumal.stock.dto.StockQueryItemResponse;
 import com.stocat.amumal.stock.dto.StockQueryRequest;
 import com.stocat.amumal.stock.dto.StockQueryResponse;
+import com.stocat.amumal.stock.dto.StockQuerySummaryResponse;
 import com.stocat.amumal.stock.service.StockQueryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
@@ -21,15 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequiredArgsConstructor
 @RequestMapping("/stocks")
+/** 게시글 작성 화면에서 종목을 찾고 선택하기 위한 검색 API */
 public class StockController {
 
   private final StockQueryService stockQueryService;
 
   @GetMapping("/{symbol}")
   @ResponseStatus(HttpStatus.OK)
-  public ApiResponse<StockQueryItemResponse> getStock(
+  public ApiResponse<StockQuerySummaryResponse> getStock(
       @PathVariable("symbol") @Pattern(regexp = "\\d{6}") String symbol) {
-    return ApiResponse.of("종목 단건 조회에 성공했습니다.", stockQueryService.getStock(symbol));
+    return ApiResponse.of("종목 조회에 성공했습니다.", stockQueryService.getStock(symbol));
   }
 
   @GetMapping
