@@ -11,8 +11,10 @@ import com.stocat.amumal.user.service.UserService;
 import com.stocat.amumal.user.usecase.DeleteUserUseCase;
 import com.stocat.amumal.user.usecase.UpdateProfileUseCase;
 import com.stocat.amumal.user.usecase.UploadProfileImageUseCase;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -65,9 +67,11 @@ public class UserController {
 
   @PostMapping("/upload/profile-image")
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<ProfileImageUploadResponse> uploadProfileImage(
+  public ResponseEntity<ApiResponse<ProfileImageUploadResponse>> uploadProfileImage(
       @RequestParam("profileImage") MultipartFile file) {
-    return ApiResponse.of("프로필 이미지가 업로드되었습니다.", uploadProfileImageUseCase.execute(file));
+    ProfileImageUploadResponse response = uploadProfileImageUseCase.execute(file);
+    return ResponseEntity.created(URI.create(response.profileImageUrl()))
+        .body(ApiResponse.of("프로필 이미지가 업로드되었습니다.", response));
   }
 
   @GetMapping("/email/check")

@@ -19,9 +19,11 @@ import com.stocat.amumal.post.usecase.UpdatePostUseCase;
 import com.stocat.amumal.post.usecase.UploadPostImageUseCase;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RequiredArgsConstructor
 @RestController
@@ -47,9 +50,15 @@ public class PostController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<CreatePostResponse> createPost(
+  public ResponseEntity<ApiResponse<CreatePostResponse>> createPost(
       @AuthUserId Long userId, @Valid @RequestBody CreatePostRequest request) {
-    return ApiResponse.of("게시글이 생성되었습니다.", createPostUseCase.execute(userId, request));
+    CreatePostResponse response = createPostUseCase.execute(userId, request);
+    URI location =
+        ServletUriComponentsBuilder.fromCurrentRequest()
+            .path("/{postId}")
+            .buildAndExpand(response.id())
+            .toUri();
+    return ResponseEntity.created(location).body(ApiResponse.of("게시글이 생성되었습니다.", response));
   }
 
   // TODO: @Deprecated
@@ -105,9 +114,11 @@ public class PostController {
 
   @PostMapping("/{post_id}/likes")
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<PostLikeResponse> likePost(
+  public ResponseEntity<ApiResponse<PostLikeResponse>> likePost(
       @Positive @PathVariable("post_id") Long postId, @AuthUserId Long userId) {
-    return ApiResponse.of("좋아요가 등록되었습니다.", postLikeService.likePost(postId, userId));
+    PostLikeResponse response = postLikeService.likePost(postId, userId);
+    URI location = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+    return ResponseEntity.created(location).body(ApiResponse.of("좋아요가 등록되었습니다.", response));
   }
 
   @DeleteMapping("/{post_id}/likes")
@@ -119,8 +130,10 @@ public class PostController {
 
   @PostMapping("/upload/attach-file")
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<PostFileUploadResponse> uploadPostImage(
+  public ResponseEntity<ApiResponse<PostFileUploadResponse>> uploadPostImage(
       @RequestParam("postFile") MultipartFile file) {
-    return ApiResponse.of("파일이 업로드되었습니다.", uploadPostImageUseCase.execute(file));
+    PostFileUploadResponse response = uploadPostImageUseCase.execute(file);
+    return ResponseEntity.created(URI.create(response.fileUrl()))
+        .body(ApiResponse.of("파일이 업로드되었습니다.", response));
   }
 }

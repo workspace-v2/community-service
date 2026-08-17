@@ -7,9 +7,11 @@ import com.stocat.amumal.comment.service.CommentService;
 import com.stocat.amumal.common.response.ApiResponse;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,11 +33,17 @@ public class CommentController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<CommentResponse> createComment(
+  public ResponseEntity<ApiResponse<CommentResponse>> createComment(
       @Positive @PathVariable("post_id") Long postId,
       @AuthUserId Long userId,
       @RequestBody CommentRequest request) {
-    return ApiResponse.of("댓글 등록에 성공했습니다.", commentService.createComment(postId, userId, request));
+    CommentResponse response = commentService.createComment(postId, userId, request);
+    URI location =
+        ServletUriComponentsBuilder.fromCurrentRequest()
+            .path("/{commentId}")
+            .buildAndExpand(response.id())
+            .toUri();
+    return ResponseEntity.created(location).body(ApiResponse.of("댓글 등록에 성공했습니다.", response));
   }
 
   @GetMapping
