@@ -138,6 +138,16 @@ class PostServiceQueryCountTest {
     assertThat(results.getFirst().title()).isEqualTo("keyword naver");
   }
 
+  @Test
+  @DisplayName("게시글 검색은 없는 종목 코드면 빈 결과를 반환한다")
+  void searchPostsReturnsEmptyWhenSymbolDoesNotExist() {
+    var results =
+        postService.searchPosts(
+            "999999", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
+
+    assertThat(results).isEmpty();
+  }
+
   private StockSnapshot activeStock(String symbol, String name) {
     LocalDateTime now = LocalDateTime.now();
     return StockSnapshot.of(symbol, name, "KOSPI", StockStatus.ACTIVE, null, null, now, now);

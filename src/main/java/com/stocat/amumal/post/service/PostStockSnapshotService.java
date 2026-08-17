@@ -58,6 +58,10 @@ public class PostStockSnapshotService {
     return new PostStockResponse(symbol, null, null);
   }
 
+  public boolean existsSymbol(String symbol) {
+    return symbol != null && stockSnapshotRepository.existsById(symbol.trim());
+  }
+
   public Map<String, PostStockResponse> getExistingStockResponses(Collection<String> symbols) {
     return getStockResponses(symbols.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
   }

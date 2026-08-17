@@ -52,6 +52,9 @@ public class PostServiceImpl implements PostService {
   @Transactional(readOnly = true)
   public PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit) {
     postValidator.validateListSize(limit);
+    if (symbol != null && !postStockSnapshotService.existsSymbol(symbol)) {
+      return new PostCursorSliceResponse(List.of(), null, false);
+    }
 
     List<Post> posts = postQuerydslService.findAllByCursor(symbol, cursor, limit + 1);
     boolean hasNext = posts.size() > limit;
@@ -66,6 +69,9 @@ public class PostServiceImpl implements PostService {
   public List<PostSummaryResponse> searchPosts(
       String symbol, String keyword, int offset, int limit, PostSearchSort sort) {
     postValidator.validateListSize(limit);
+    if (symbol != null && !postStockSnapshotService.existsSymbol(symbol)) {
+      return List.of();
+    }
 
     return toPostSummaryResponses(
         postQuerydslService.searchPosts(symbol, keyword, offset, limit, sort));

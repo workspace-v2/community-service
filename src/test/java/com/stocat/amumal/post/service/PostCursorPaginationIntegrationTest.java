@@ -117,6 +117,16 @@ class PostCursorPaginationIntegrationTest {
     assertThat(response.content()).extracting(PostSummaryResponse::symbol).containsOnly("005930");
   }
 
+  @Test
+  @DisplayName("커서 페이지네이션은 없는 종목 코드면 빈 결과를 반환한다")
+  void getPostsByCursorReturnsEmptyWhenSymbolDoesNotExist() {
+    PostCursorSliceResponse response = postService.getPostsByCursor("999999", null, 10);
+
+    assertThat(response.content()).isEmpty();
+    assertThat(response.nextCursor()).isNull();
+    assertThat(response.hasNext()).isFalse();
+  }
+
   private List<Long> extractIds(List<PostSummaryResponse> content) {
     return content.stream().map(PostSummaryResponse::id).toList();
   }
