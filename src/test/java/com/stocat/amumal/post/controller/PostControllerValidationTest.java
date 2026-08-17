@@ -70,7 +70,7 @@ class PostControllerValidationTest {
       }
 
       @Override
-      public java.util.List<com.stocat.amumal.post.dto.PostSummaryResponse> searchPosts(
+      public com.stocat.amumal.post.dto.PostSearchSliceResponse searchPosts(
           String symbol,
           String keyword,
           int offset,

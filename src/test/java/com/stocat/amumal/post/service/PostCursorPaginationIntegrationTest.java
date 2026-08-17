@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
+import com.stocat.amumal.post.dto.PostSearchSliceResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.stock.domain.StockSnapshot;
@@ -125,6 +126,31 @@ class PostCursorPaginationIntegrationTest {
     assertThat(response.content()).isEmpty();
     assertThat(response.nextCursor()).isNull();
     assertThat(response.hasNext()).isFalse();
+  }
+
+  @Test
+  @DisplayName("검색 페이지네이션은 hasNext와 offset 정보를 함께 반환한다")
+  void searchPostsReturnsSliceMetadata() {
+    User user =
+        userRepository.save(
+            User.of("search-slice@stocat.com", "Password1!", "srchslice", "https://example.com"));
+    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
+
+    for (int i = 1; i <= 11; i++) {
+      postRepository.save(Post.of(user, "005930", "keyword title " + i, "keyword content " + i, null));
+    }
+
+    entityManager.flush();
+    entityManager.clear();
+
+    PostSearchSliceResponse response =
+        postService.searchPosts("005930", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
+
+    assertThat(response.content()).hasSize(10);
+    assertThat(response.offset()).isEqualTo(0);
+    assertThat(response.limit()).isEqualTo(10);
+    assertThat(response.hasNext()).isTrue();
+    assertSortedDescending(response.content());
   }
 
   private List<Long> extractIds(List<PostSummaryResponse> content) {

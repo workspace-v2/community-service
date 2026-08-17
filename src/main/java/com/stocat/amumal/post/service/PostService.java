@@ -2,6 +2,7 @@ package com.stocat.amumal.post.service;
 
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
+import com.stocat.amumal.post.dto.PostSearchSliceResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import java.util.List;
@@ -12,7 +13,7 @@ public interface PostService {
 
   PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit);
 
-  List<PostSummaryResponse> searchPosts(
+  PostSearchSliceResponse searchPosts(
       String symbol, String keyword, int offset, int limit, PostSearchSort sort);
 
   GetPostResponse getPost(Long postId, Long userId);

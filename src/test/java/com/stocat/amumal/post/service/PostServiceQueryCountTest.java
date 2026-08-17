@@ -133,9 +133,9 @@ class PostServiceQueryCountTest {
         postService.searchPosts(
             "035420", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
 
-    assertThat(results).hasSize(1);
-    assertThat(results.getFirst().symbol()).isEqualTo("035420");
-    assertThat(results.getFirst().title()).isEqualTo("keyword naver");
+    assertThat(results.content()).hasSize(1);
+    assertThat(results.content().getFirst().symbol()).isEqualTo("035420");
+    assertThat(results.content().getFirst().title()).isEqualTo("keyword naver");
   }
 
   @Test
@@ -145,7 +145,8 @@ class PostServiceQueryCountTest {
         postService.searchPosts(
             "999999", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
 
-    assertThat(results).isEmpty();
+    assertThat(results.content()).isEmpty();
+    assertThat(results.hasNext()).isFalse();
   }
 
   private StockSnapshot activeStock(String symbol, String name) {

@@ -7,6 +7,7 @@ import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.domain.PostLikeId;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
+import com.stocat.amumal.post.dto.PostSearchSliceResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostStockResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
@@ -66,15 +67,19 @@ public class PostServiceImpl implements PostService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<PostSummaryResponse> searchPosts(
+  public PostSearchSliceResponse searchPosts(
       String symbol, String keyword, int offset, int limit, PostSearchSort sort) {
     postValidator.validateListSize(limit);
     if (symbol != null && !postStockSnapshotService.existsSymbol(symbol)) {
-      return List.of();
+      return new PostSearchSliceResponse(List.of(), offset, limit, false);
     }
 
-    return toPostSummaryResponses(
-        postQuerydslService.searchPosts(symbol, keyword, offset, limit, sort));
+    List<Post> posts = postQuerydslService.searchPosts(symbol, keyword, offset, limit + 1, sort);
+    boolean hasNext = posts.size() > limit;
+    List<Post> pagePosts = hasNext ? posts.subList(0, limit) : posts;
+
+    return new PostSearchSliceResponse(
+        toPostSummaryResponses(pagePosts), offset, limit, hasNext);
   }
 
   @Override

@@ -7,6 +7,7 @@ import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
 import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
+import com.stocat.amumal.post.dto.PostSearchSliceResponse;
 import com.stocat.amumal.post.dto.PostLikeResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
@@ -85,7 +86,7 @@ public class PostController {
 
   @GetMapping("/search")
   @ResponseStatus(HttpStatus.OK)
-  public ApiResponse<List<PostSummaryResponse>> searchPosts(
+  public ApiResponse<PostSearchSliceResponse> searchPosts(
       @Pattern(regexp = "\\d{6}") @RequestParam(value = "symbol", required = false) String symbol,
       @RequestParam("keyword") String keyword,
       @RequestParam(value = "offset", defaultValue = "0") int offset,
