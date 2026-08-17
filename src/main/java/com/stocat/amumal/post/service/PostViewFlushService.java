@@ -5,6 +5,8 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -43,7 +45,7 @@ public class PostViewFlushService {
         transactionTemplate.execute(
             transactionStatus -> {
               int count = postRepository.incrementViewCount(postId, delta);
-              postViewService.applyFlushedViewCount(postId, delta);
+              registerFlushSynchronization(postId, delta);
               return count;
             });
 
@@ -53,5 +55,23 @@ public class PostViewFlushService {
     }
 
     return 1;
+  }
+
+  private void registerFlushSynchronization(Long postId, long delta) {
+    TransactionSynchronizationManager.registerSynchronization(
+        new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            // DB commit이 확정된 뒤에만 Redis delta를 차감해 조회수 유실 방지
+            postViewService.applyFlushedViewCount(postId, delta);
+          }
+
+          @Override
+          public void afterCompletion(int status) {
+            if (status != STATUS_COMMITTED) {
+              postViewService.markDirtyPost(postId);
+            }
+          }
+        });
   }
 }

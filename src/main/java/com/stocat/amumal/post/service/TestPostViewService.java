@@ -81,4 +81,9 @@ public class TestPostViewService implements PostViewService {
   public void markDirtyPost(Long postId) {
     dirtyPostIds.add(postId);
   }
+
+  void clear() {
+    deltas.clear();
+    dirtyPostIds.clear();
+  }
 }

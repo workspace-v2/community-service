@@ -2,7 +2,8 @@ package com.stocat.amumal.post.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -13,7 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,12 +34,10 @@ class PostViewFlushServiceUnitTest {
     postViewService = new TestPostViewService();
     postViewFlushService = new PostViewFlushService(postViewService, postRepository, transactionTemplate);
 
-    when(transactionTemplate.execute(any()))
-        .thenAnswer(
-            invocation ->
-                ((TransactionCallback<?>)
-                        invocation.getArgument(0, TransactionCallback.class))
-                    .doInTransaction(mock()));
+    lenient()
+        .doAnswer(invocation -> executeWithTransactionSynchronization(invocation.getArgument(0)))
+        .when(transactionTemplate)
+        .execute(any());
   }
 
   @Test
@@ -56,5 +58,51 @@ class PostViewFlushServiceUnitTest {
     assertThat(postViewService.getViewCountDelta(2L)).isEqualTo(1L);
     assertThat(postViewService.getViewCountDelta(3L)).isZero();
     assertThat(postViewService.getDirtyPostIds(10)).containsExactly(2L);
+  }
+
+  @Test
+  @DisplayName("트랜잭션 commit 실패 시 dirty post를 다시 등록하고 delta는 유지한다")
+  void flushDirtyPostViewCountsKeepsDeltaWhenCommitFails() {
+    postViewService.incrementViewCount(1L);
+    when(postRepository.incrementViewCount(1L, 1L)).thenReturn(1);
+    doAnswer(
+            invocation ->
+                executeWithTransactionSynchronization(invocation.getArgument(0), true))
+        .when(transactionTemplate)
+        .execute(any());
+
+    int flushedPostCount = postViewFlushService.flushDirtyPostViewCounts(10);
+
+    assertThat(flushedPostCount).isZero();
+    assertThat(postViewService.getViewCountDelta(1L)).isEqualTo(1L);
+    assertThat(postViewService.getDirtyPostIds(10)).containsExactly(1L);
+  }
+
+  private Object executeWithTransactionSynchronization(TransactionCallback<?> callback) {
+    return executeWithTransactionSynchronization(callback, false);
+  }
+
+  private Object executeWithTransactionSynchronization(
+      TransactionCallback<?> callback, boolean failCommit) {
+    TransactionSynchronizationManager.initSynchronization();
+    try {
+      Object result = callback.doInTransaction(mock(TransactionStatus.class));
+      for (TransactionSynchronization synchronization :
+          TransactionSynchronizationManager.getSynchronizations()) {
+        if (!failCommit) {
+          synchronization.afterCommit();
+          synchronization.afterCompletion(TransactionSynchronization.STATUS_COMMITTED);
+        } else {
+          synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+        }
+      }
+
+      if (failCommit) {
+        throw new RuntimeException("commit failure");
+      }
+      return result;
+    } finally {
+      TransactionSynchronizationManager.clearSynchronization();
+    }
   }
 }

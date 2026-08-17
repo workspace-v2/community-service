@@ -6,24 +6,27 @@ import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
-import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(properties = "spring.profiles.include=")
 @ActiveProfiles("test")
-@Transactional
 class PostViewFlushServiceTest {
 
   @Autowired private PostViewFlushService postViewFlushService;
   @Autowired private PostViewService postViewService;
+  @Autowired private TestPostViewService testPostViewService;
   @Autowired private PostRepository postRepository;
   @Autowired private UserRepository userRepository;
-  @Autowired private EntityManager entityManager;
+
+  @BeforeEach
+  void setUp() {
+    testPostViewService.clear();
+  }
 
   @Test
   @DisplayName("dirty post 조회수 delta를 DB에 flush하고 dirty 집합에서 제거한다")
@@ -35,9 +38,6 @@ class PostViewFlushServiceTest {
     postViewService.incrementViewCount(post.getId());
 
     int flushedPostCount = postViewFlushService.flushDirtyPostViewCounts(10);
-
-    entityManager.flush();
-    entityManager.clear();
 
     Post reloadedPost = postRepository.findById(post.getId()).orElseThrow();
 
