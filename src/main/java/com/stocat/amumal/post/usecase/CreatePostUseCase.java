@@ -36,7 +36,7 @@ public class CreatePostUseCase {
             .findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
     StockSnapshot stockSnapshot =
-        postStockSnapshotService.getActiveStockSnapshot(request.symbol().trim());
+        postStockSnapshotService.getStockSnapshot(request.symbol().trim());
 
     Post savedPost =
         postRepository.save(
