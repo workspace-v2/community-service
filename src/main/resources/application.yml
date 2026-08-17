@@ -44,6 +44,10 @@ spring:
 app:
   upload:
     base-dir: ./uploads
+  stock-sync:
+    base-url: ${MARKET_DATA_SERVICE_BASE_URL:http://localhost:8081}
+    batch-size: ${STOCK_SYNC_BATCH_SIZE:500}
+    fixed-delay-ms: ${STOCK_SYNC_FIXED_DELAY_MS:300000}
   seed:
     test-user-count: ${TEST_USER_COUNT:20}
     test-user-password: ${TEST_USER_PASSWORD:Password1!}
