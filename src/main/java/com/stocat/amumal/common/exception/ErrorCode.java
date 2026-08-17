@@ -56,9 +56,6 @@ public enum ErrorCode {
   INVALID_POST_SYMBOL("INVALID_INPUT", HttpStatus.BAD_REQUEST, "유효하지 않은 종목 코드입니다."),
   UNAVAILABLE_POST_SYMBOL("INVALID_INPUT", HttpStatus.BAD_REQUEST, "현재 게시글을 작성할 수 없는 종목입니다."),
   STOCK_NOT_FOUND("STOCK_NOT_FOUND", HttpStatus.NOT_FOUND, "종목을 찾을 수 없습니다."),
-  MISSING_STOCK_QUERY_CONDITION(
-      "INVALID_INPUT", HttpStatus.BAD_REQUEST, "symbol 또는 name 중 하나는 필요합니다."),
-  INVALID_STOCK_QUERY_LIMIT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "limit는 100 이하여야 합니다."),
   TOO_MANY_IMAGES("INVALID_INPUT", HttpStatus.BAD_REQUEST, "이미지 파일은 1개만 업로드할 수 있습니다."),
 
   // Comment
