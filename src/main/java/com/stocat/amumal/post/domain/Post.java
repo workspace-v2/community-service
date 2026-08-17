@@ -33,6 +33,9 @@ public class Post extends BaseEntity {
   @Column(nullable = false, length = 26)
   private String title;
 
+  @Column(length = 6)
+  private String symbol;
+
   @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
@@ -48,9 +51,10 @@ public class Post extends BaseEntity {
   @Column(nullable = false)
   private long viewCount = 0;
 
-  public static Post of(User user, String title, String content, String imageUrl) {
+  public static Post of(User user, String symbol, String title, String content, String imageUrl) {
     Post post = new Post();
     post.user = user;
+    post.symbol = symbol;
     post.title = title;
     post.content = content;
     post.imageUrl = imageUrl;
