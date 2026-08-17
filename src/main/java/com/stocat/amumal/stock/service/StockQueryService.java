@@ -29,10 +29,10 @@ public class StockQueryService {
   }
 
   /**
-   * 로컬에 복제된 종목 스냅샷에서 정확 조건 조회를 수행한다.
+   * 로컬에 복제된 종목 스냅샷에서 글 작성용 종목 조회를 수행한다.
    *
-   * <p>정확 조회는 게시글 작성 전 종목 선택 UI를 위한 것이므로 symbol, name 모두 부분 검색이 아니라 exact match만 허용한다. symbol과
-   * name을 함께 주면 AND 조건으로 동작한다.
+   * <p>symbol은 정확 일치, name은 포함 검색 기준으로 조회한다. symbol과 name을 함께 주면 symbol exact + name contains의 AND
+   * 조건으로 동작한다.
    */
   public StockQueryResponse getStocks(String symbol, String name, int limit) {
     List<StockSnapshot> stocks = findStocks(symbol, name, limit + 1);
@@ -49,14 +49,15 @@ public class StockQueryService {
     if (normalizedSymbol != null && normalizedName != null) {
       return stockSnapshotRepository
           .findById(normalizedSymbol)
-          .filter(stock -> stock.getName().equals(normalizedName))
+          .filter(stock -> containsIgnoreCase(stock.getName(), normalizedName))
           .stream()
           .toList();
     }
     if (normalizedSymbol != null) {
       return stockSnapshotRepository.findById(normalizedSymbol).stream().toList();
     }
-    return stockSnapshotRepository.findAllByName(normalizedName, PageRequest.of(0, limit));
+    return stockSnapshotRepository.findAllByNameContainingIgnoreCase(
+        normalizedName, PageRequest.of(0, limit));
   }
 
   private String normalize(String value) {
@@ -66,5 +67,9 @@ public class StockQueryService {
 
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;
+  }
+
+  private boolean containsIgnoreCase(String actual, String keyword) {
+    return actual != null && actual.toLowerCase().contains(keyword.toLowerCase());
   }
 }

@@ -10,5 +10,5 @@ public interface StockSnapshotRepository extends JpaRepository<StockSnapshot, St
 
   List<StockSnapshot> findAllBySymbolIn(Collection<String> symbols);
 
-  List<StockSnapshot> findAllByName(String name, Pageable pageable);
+  List<StockSnapshot> findAllByNameContainingIgnoreCase(String name, Pageable pageable);
 }

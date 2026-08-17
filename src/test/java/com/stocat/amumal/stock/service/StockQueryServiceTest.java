@@ -60,22 +60,22 @@ class StockQueryServiceTest {
   }
 
   @Test
-  void name_정확_일치로_조회한다() {
-    when(stockSnapshotRepository.findAllByName("삼성전자", Pageable.ofSize(11)))
+  void name_포함_검색으로_조회한다() {
+    when(stockSnapshotRepository.findAllByNameContainingIgnoreCase("삼성", Pageable.ofSize(11)))
         .thenReturn(List.of(stock("005930", "삼성전자")));
 
-    StockQueryResponse response = stockQueryService.getStocks(null, "삼성전자", 10);
+    StockQueryResponse response = stockQueryService.getStocks(null, "삼성", 10);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.items().get(0).name()).isEqualTo("삼성전자");
   }
 
   @Test
-  void symbol과_name을_함께_주면_and_조건으로_조회한다() {
+  void symbol과_name을_함께_주면_symbol_exact_name_contains로_조회한다() {
     when(stockSnapshotRepository.findById("005930"))
         .thenReturn(Optional.of(stock("005930", "삼성전자")));
 
-    StockQueryResponse response = stockQueryService.getStocks("005930", "삼성전자", 10);
+    StockQueryResponse response = stockQueryService.getStocks("005930", "삼성", 10);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.items().get(0).symbol()).isEqualTo("005930");
@@ -83,10 +83,10 @@ class StockQueryServiceTest {
 
   @Test
   void name_조회는_limit_기준으로_hasNext를_계산한다() {
-    when(stockSnapshotRepository.findAllByName("삼성전자", Pageable.ofSize(2)))
-        .thenReturn(List.of(stock("005930", "삼성전자"), stock("005931", "삼성전자")));
+    when(stockSnapshotRepository.findAllByNameContainingIgnoreCase("삼성", Pageable.ofSize(2)))
+        .thenReturn(List.of(stock("005930", "삼성전자"), stock("005931", "삼성바이오")));
 
-    StockQueryResponse response = stockQueryService.getStocks(null, "삼성전자", 1);
+    StockQueryResponse response = stockQueryService.getStocks(null, "삼성", 1);
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.hasNext()).isTrue();
