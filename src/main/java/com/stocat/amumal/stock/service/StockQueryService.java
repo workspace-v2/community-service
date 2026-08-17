@@ -5,6 +5,7 @@ import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.stock.domain.StockSnapshot;
 import com.stocat.amumal.stock.dto.StockQueryItemResponse;
 import com.stocat.amumal.stock.dto.StockQueryResponse;
+import com.stocat.amumal.stock.dto.StockQuerySummaryResponse;
 import com.stocat.amumal.stock.repository.StockSnapshotRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,8 @@ public class StockQueryService {
   public StockQueryResponse getStocks(String symbol, String name, int limit) {
     List<StockSnapshot> stocks = findStocks(symbol, name, limit + 1);
     boolean hasNext = stocks.size() > limit;
-    List<StockQueryItemResponse> items =
-        stocks.stream().limit(limit).map(StockQueryItemResponse::from).toList();
+    List<StockQuerySummaryResponse> items =
+        stocks.stream().limit(limit).map(StockQuerySummaryResponse::from).toList();
     return new StockQueryResponse(items, hasNext);
   }
 

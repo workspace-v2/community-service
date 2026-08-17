@@ -10,6 +10,7 @@ import com.stocat.amumal.stock.domain.StockSnapshot;
 import com.stocat.amumal.stock.domain.StockStatus;
 import com.stocat.amumal.stock.dto.StockQueryItemResponse;
 import com.stocat.amumal.stock.dto.StockQueryResponse;
+import com.stocat.amumal.stock.dto.StockQuerySummaryResponse;
 import com.stocat.amumal.stock.repository.StockSnapshotRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,6 +57,7 @@ class StockQueryServiceTest {
 
     assertThat(response.items()).hasSize(1);
     assertThat(response.items().get(0).symbol()).isEqualTo("005930");
+    assertThat(response.items().get(0)).isInstanceOf(StockQuerySummaryResponse.class);
     assertThat(response.hasNext()).isFalse();
   }
 
