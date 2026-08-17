@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record GetPostResponse(
     Long id,
+    String symbol,
+    String stockName,
+    String market,
     Long userId,
     Long writerId,
     String title,
