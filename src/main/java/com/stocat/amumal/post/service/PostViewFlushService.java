@@ -37,7 +37,7 @@ public class PostViewFlushService {
   private int flushSinglePost(Long postId) {
     long delta = postViewService.getViewCountDelta(postId);
     if (delta <= 0) {
-      postViewService.applyFlushedViewCount(postId, delta);
+      // Flush 대기 중 다른 요청이 dirty marker를 다시 세울 수 있어 0 이하 delta에서는 건드리지 않는다.
       return 0;
     }
 

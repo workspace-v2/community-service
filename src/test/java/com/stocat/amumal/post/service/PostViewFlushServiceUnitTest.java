@@ -78,6 +78,36 @@ class PostViewFlushServiceUnitTest {
     assertThat(postViewService.getDirtyPostIds(10)).containsExactly(1L);
   }
 
+  @Test
+  @DisplayName("flush가 delta 0을 읽은 직후 새 조회수가 들어와도 dirty post를 유지한다")
+  void flushDirtyPostViewCountsKeepsDirtyPostWhenDeltaTurnsPositiveAfterZeroRead() {
+    Long postId = 1L;
+    postViewService =
+        new TestPostViewService() {
+          private boolean incrementedAfterZeroRead;
+
+          @Override
+          public long getViewCountDelta(Long requestedPostId) {
+            long delta = super.getViewCountDelta(requestedPostId);
+            if (requestedPostId.equals(postId) && delta == 0L && !incrementedAfterZeroRead) {
+              incrementedAfterZeroRead = true;
+              incrementViewCount(requestedPostId);
+              return 0L;
+            }
+            return delta;
+          }
+        };
+    postViewFlushService =
+        new PostViewFlushService(postViewService, postRepository, transactionTemplate);
+    postViewService.markDirtyPost(postId);
+
+    int flushedPostCount = postViewFlushService.flushDirtyPostViewCounts(10);
+
+    assertThat(flushedPostCount).isZero();
+    assertThat(postViewService.getViewCountDelta(postId)).isEqualTo(1L);
+    assertThat(postViewService.getDirtyPostIds(10)).containsExactly(postId);
+  }
+
   private Object executeWithTransactionSynchronization(TransactionCallback<?> callback) {
     return executeWithTransactionSynchronization(callback, false);
   }
