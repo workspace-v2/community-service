@@ -4,8 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.repository.PostRepository;
+import com.stocat.amumal.stock.domain.StockSnapshot;
+import com.stocat.amumal.stock.domain.StockStatus;
+import com.stocat.amumal.stock.repository.StockSnapshotRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,7 @@ class PostViewFlushServiceTest {
   @Autowired private TestPostViewService testPostViewService;
   @Autowired private PostRepository postRepository;
   @Autowired private UserRepository userRepository;
+  @Autowired private StockSnapshotRepository stockSnapshotRepository;
 
   @BeforeEach
   void setUp() {
@@ -68,7 +73,13 @@ class PostViewFlushServiceTest {
   }
 
   private Post savePost(String email, String nickname) {
+    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
     User user = userRepository.save(User.of(email, "Password1!", nickname, "https://example.com"));
-    return postRepository.save(Post.of(user, "title", "content", null));
+    return postRepository.save(Post.of(user, "005930", "title", "content", null));
+  }
+
+  private StockSnapshot activeStock(String symbol, String name) {
+    LocalDateTime now = LocalDateTime.now();
+    return StockSnapshot.of(symbol, name, "KOSPI", StockStatus.ACTIVE, null, null, now, now);
   }
 }

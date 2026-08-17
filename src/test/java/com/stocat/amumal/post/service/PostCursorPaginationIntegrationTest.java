@@ -6,9 +6,13 @@ import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.repository.PostRepository;
+import com.stocat.amumal.stock.domain.StockSnapshot;
+import com.stocat.amumal.stock.domain.StockStatus;
+import com.stocat.amumal.stock.repository.StockSnapshotRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -27,6 +31,7 @@ class PostCursorPaginationIntegrationTest {
   @Autowired private PostService postService;
   @Autowired private UserRepository userRepository;
   @Autowired private PostRepository postRepository;
+  @Autowired private StockSnapshotRepository stockSnapshotRepository;
   @Autowired private EntityManager entityManager;
 
   @Test
@@ -35,10 +40,12 @@ class PostCursorPaginationIntegrationTest {
     User user =
         userRepository.save(
             User.of("cursor-writer@stocat.com", "Password1!", "cursor", "https://example.com"));
+    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
 
     List<Long> expectedIds = new ArrayList<>();
     for (int i = 1; i <= 25; i++) {
-      Post savedPost = postRepository.save(Post.of(user, "title-" + i, "content-" + i, null));
+      Post savedPost =
+          postRepository.save(Post.of(user, "005930", "title-" + i, "content-" + i, null));
       expectedIds.add(savedPost.getId());
     }
 
@@ -90,5 +97,10 @@ class PostCursorPaginationIntegrationTest {
     assertThat(content)
         .extracting(PostSummaryResponse::id)
         .isSortedAccordingTo(Comparator.reverseOrder());
+  }
+
+  private StockSnapshot activeStock(String symbol, String name) {
+    LocalDateTime now = LocalDateTime.now();
+    return StockSnapshot.of(symbol, name, "KOSPI", StockStatus.ACTIVE, null, null, now, now);
   }
 }
