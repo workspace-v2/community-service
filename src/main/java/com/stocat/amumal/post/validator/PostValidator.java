@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 public class PostValidator {
 
   public void validateCreatePost(CreatePostRequest request) {
+    validateSymbol(request.symbol());
     validateTitleAndContent(request.title(), request.content());
+    validateSingleImage(request.image());
   }
 
   public void validateListSize(int size) {
@@ -31,6 +33,16 @@ public class PostValidator {
     }
 
     validateTitleLength(title);
+  }
+
+  private void validateSymbol(String symbol) {
+    if (isBlank(symbol)) {
+      throw new ApiException(ErrorCode.EMPTY_POST_SYMBOL);
+    }
+
+    if (!symbol.trim().matches("\\d{6}")) {
+      throw new ApiException(ErrorCode.INVALID_POST_SYMBOL_FORMAT);
+    }
   }
 
   private void validateTitle(String title) {
