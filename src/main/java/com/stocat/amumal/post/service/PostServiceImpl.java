@@ -88,7 +88,8 @@ public class PostServiceImpl implements PostService {
             : postStockSnapshotService
                 .getExistingStockResponses(Collections.singletonList(post.getSymbol()))
                 .getOrDefault(
-                    post.getSymbol(), postStockSnapshotService.emptyStockResponse(post.getSymbol()));
+                    post.getSymbol(),
+                    postStockSnapshotService.emptyStockResponse(post.getSymbol()));
     boolean isLiked = postLikeRepository.existsById(new PostLikeId(postId, userId));
 
     return new GetPostResponse(

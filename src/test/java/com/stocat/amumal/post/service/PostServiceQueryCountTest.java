@@ -94,7 +94,8 @@ class PostServiceQueryCountTest {
         userRepository.save(
             User.of("search-writer@stocat.com", "Password1!", "searcher", "https://example.com"));
     for (int i = 1; i <= 10; i++) {
-      postRepository.save(Post.of(user, "035420", "keyword title " + i, "keyword content " + i, null));
+      postRepository.save(
+          Post.of(user, "035420", "keyword title " + i, "keyword content " + i, null));
     }
 
     entityManager.flush();

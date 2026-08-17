@@ -49,7 +49,8 @@ public class UpdatePostUseCase {
             : postStockSnapshotService
                 .getExistingStockResponses(Collections.singletonList(post.getSymbol()))
                 .getOrDefault(
-                    post.getSymbol(), postStockSnapshotService.emptyStockResponse(post.getSymbol()));
+                    post.getSymbol(),
+                    postStockSnapshotService.emptyStockResponse(post.getSymbol()));
 
     return new UpdatePostResponse(
         post.getId(),

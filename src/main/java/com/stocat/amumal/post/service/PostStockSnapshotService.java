@@ -59,7 +59,6 @@ public class PostStockSnapshotService {
   }
 
   public Map<String, PostStockResponse> getExistingStockResponses(Collection<String> symbols) {
-    return getStockResponses(
-        symbols.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
+    return getStockResponses(symbols.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
   }
 }
