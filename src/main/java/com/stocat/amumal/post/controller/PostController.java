@@ -18,12 +18,14 @@ import com.stocat.amumal.post.usecase.CreatePostUseCase;
 import com.stocat.amumal.post.usecase.UpdatePostUseCase;
 import com.stocat.amumal.post.usecase.UploadPostImageUseCase;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,6 +41,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RequiredArgsConstructor
 @RestController
+@Validated
 @RequestMapping("/posts")
 public class PostController {
 
@@ -73,7 +76,7 @@ public class PostController {
   @GetMapping("/cursor")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<PostCursorSliceResponse> getPostsByCursor(
-      @RequestParam(value = "symbol", required = false) String symbol,
+      @Pattern(regexp = "\\d{6}") @RequestParam(value = "symbol", required = false) String symbol,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
     return ApiResponse.of(
@@ -83,7 +86,7 @@ public class PostController {
   @GetMapping("/search")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<List<PostSummaryResponse>> searchPosts(
-      @RequestParam(value = "symbol", required = false) String symbol,
+      @Pattern(regexp = "\\d{6}") @RequestParam(value = "symbol", required = false) String symbol,
       @RequestParam("keyword") String keyword,
       @RequestParam(value = "offset", defaultValue = "0") int offset,
       @Positive @RequestParam(value = "limit", defaultValue = "10") int limit,
