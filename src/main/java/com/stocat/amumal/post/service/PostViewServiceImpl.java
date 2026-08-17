@@ -1,6 +1,7 @@
 package com.stocat.amumal.post.service;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,25 @@ public class PostViewServiceImpl implements PostViewService {
           local delta = redis.call('INCR', KEYS[1])
           redis.call('EXPIRE', KEYS[1], ARGV[2])
           return delta
+          """,
+          Long.class);
+
+  // Flush 중에도 새 조회수가 들어올 수 있으므로, delta 차감과 dirty set 정리를
+  // Redis에서 원자적으로 처리해 상태 불일치 방지
+  private static final DefaultRedisScript<Long> APPLY_FLUSHED_VIEW_COUNT_SCRIPT =
+      new DefaultRedisScript<>(
+          """
+          local current = tonumber(redis.call('GET', KEYS[1]) or '0')
+          local flushed = tonumber(ARGV[2])
+          if current <= flushed then
+            redis.call('DEL', KEYS[1])
+            redis.call('SREM', KEYS[2], ARGV[1])
+            return 0
+          end
+          redis.call('DECRBY', KEYS[1], flushed)
+          redis.call('EXPIRE', KEYS[1], ARGV[3])
+          redis.call('SADD', KEYS[2], ARGV[1])
+          return current - flushed
           """,
           Long.class);
 
@@ -73,6 +93,44 @@ public class PostViewServiceImpl implements PostViewService {
     }
 
     return dirtyPostIds;
+  }
+
+  @Override
+  public void applyFlushedViewCount(Long postId, long flushedDelta) {
+    if (flushedDelta <= 0) {
+      stringRedisTemplate.opsForSet().remove(VIEW_COUNT_DIRTY_KEY, String.valueOf(postId));
+      return;
+    }
+
+    stringRedisTemplate.execute(
+        APPLY_FLUSHED_VIEW_COUNT_SCRIPT,
+        List.of(buildDeltaKey(postId), VIEW_COUNT_DIRTY_KEY),
+        String.valueOf(postId),
+        String.valueOf(flushedDelta),
+        String.valueOf(VIEW_COUNT_DELTA_TTL_SECONDS));
+  }
+
+  @Override
+  public Set<Long> popDirtyPostIds(int limit) {
+    List<String> dirtyPostIds = stringRedisTemplate.opsForSet().pop(VIEW_COUNT_DIRTY_KEY, limit);
+    if (dirtyPostIds == null || dirtyPostIds.isEmpty()) {
+      return Set.of();
+    }
+
+    Set<Long> result = new LinkedHashSet<>();
+    for (String dirtyPostId : dirtyPostIds) {
+      try {
+        result.add(Long.parseLong(dirtyPostId));
+      } catch (NumberFormatException exception) {
+        log.warn("Discarding invalid post id popped from dirty set: {}", dirtyPostId, exception);
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public void markDirtyPost(Long postId) {
+    stringRedisTemplate.opsForSet().add(VIEW_COUNT_DIRTY_KEY, String.valueOf(postId));
   }
 
   private String buildDeltaKey(Long postId) {

@@ -38,4 +38,47 @@ public class TestPostViewService implements PostViewService {
     }
     return result;
   }
+
+  @Override
+  public Set<Long> popDirtyPostIds(int limit) {
+    Set<Long> result = new LinkedHashSet<>();
+    for (Long dirtyPostId : dirtyPostIds) {
+      if (!dirtyPostIds.remove(dirtyPostId)) {
+        continue;
+      }
+      result.add(dirtyPostId);
+      if (result.size() == limit) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public void applyFlushedViewCount(Long postId, long flushedDelta) {
+    if (flushedDelta <= 0) {
+      dirtyPostIds.remove(postId);
+      return;
+    }
+
+    AtomicLong delta = deltas.get(postId);
+    if (delta == null) {
+      dirtyPostIds.remove(postId);
+      return;
+    }
+
+    long remainingDelta = delta.addAndGet(-flushedDelta);
+    if (remainingDelta <= 0) {
+      deltas.remove(postId, delta);
+      dirtyPostIds.remove(postId);
+      return;
+    }
+
+    dirtyPostIds.add(postId);
+  }
+
+  @Override
+  public void markDirtyPost(Long postId) {
+    dirtyPostIds.add(postId);
+  }
 }
