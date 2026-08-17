@@ -50,10 +50,10 @@ public class PostServiceImpl implements PostService {
 
   @Override
   @Transactional(readOnly = true)
-  public PostCursorSliceResponse getPostsByCursor(Long cursor, int limit) {
+  public PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit) {
     postValidator.validateListSize(limit);
 
-    List<Post> posts = postQuerydslService.findAllByCursor(cursor, limit + 1);
+    List<Post> posts = postQuerydslService.findAllByCursor(symbol, cursor, limit + 1);
     boolean hasNext = posts.size() > limit;
     List<Post> pagePosts = hasNext ? posts.subList(0, limit) : posts;
     Long nextCursor = hasNext ? pagePosts.getLast().getId() : null;

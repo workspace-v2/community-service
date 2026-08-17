@@ -54,7 +54,7 @@ class PostCursorPaginationIntegrationTest {
 
     expectedIds.sort(Comparator.reverseOrder());
 
-    PostCursorSliceResponse firstPage = postService.getPostsByCursor(null, 10);
+    PostCursorSliceResponse firstPage = postService.getPostsByCursor(null, null, 10);
     assertThat(firstPage.content()).hasSize(10);
     assertThat(firstPage.hasNext()).isTrue();
     assertThat(firstPage.nextCursor()).isEqualTo(firstPage.content().getLast().id());
@@ -62,7 +62,8 @@ class PostCursorPaginationIntegrationTest {
         .containsExactlyElementsOf(expectedIds.subList(0, 10));
     assertSortedDescending(firstPage.content());
 
-    PostCursorSliceResponse secondPage = postService.getPostsByCursor(firstPage.nextCursor(), 10);
+    PostCursorSliceResponse secondPage =
+        postService.getPostsByCursor(null, firstPage.nextCursor(), 10);
     assertThat(secondPage.content()).hasSize(10);
     assertThat(secondPage.hasNext()).isTrue();
     assertThat(secondPage.nextCursor()).isEqualTo(secondPage.content().getLast().id());
@@ -72,7 +73,8 @@ class PostCursorPaginationIntegrationTest {
         .doesNotContainAnyElementsOf(extractIds(secondPage.content()));
     assertSortedDescending(secondPage.content());
 
-    PostCursorSliceResponse thirdPage = postService.getPostsByCursor(secondPage.nextCursor(), 10);
+    PostCursorSliceResponse thirdPage =
+        postService.getPostsByCursor(null, secondPage.nextCursor(), 10);
     assertThat(thirdPage.content()).hasSize(5);
     assertThat(thirdPage.hasNext()).isFalse();
     assertThat(thirdPage.nextCursor()).isNull();
@@ -87,6 +89,32 @@ class PostCursorPaginationIntegrationTest {
     actualIds.addAll(extractIds(secondPage.content()));
     actualIds.addAll(extractIds(thirdPage.content()));
     assertThat(actualIds).containsExactlyElementsOf(expectedIds);
+  }
+
+  @Test
+  @DisplayName("커서 페이지네이션은 symbol 필터가 있으면 해당 종목 게시글만 조회한다")
+  void getPostsByCursorFiltersBySymbol() {
+    User user =
+        userRepository.save(
+            User.of(
+                "symbol-cursor-writer@stocat.com",
+                "Password1!",
+                "symbolcur",
+                "https://example.com"));
+    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
+    stockSnapshotRepository.save(activeStock("000660", "SK하이닉스"));
+
+    Post samsung1 = postRepository.save(Post.of(user, "005930", "s-title-1", "content", null));
+    postRepository.save(Post.of(user, "000660", "h-title-1", "content", null));
+    Post samsung2 = postRepository.save(Post.of(user, "005930", "s-title-2", "content", null));
+
+    entityManager.flush();
+    entityManager.clear();
+
+    PostCursorSliceResponse response = postService.getPostsByCursor("005930", null, 10);
+
+    assertThat(extractIds(response.content())).containsExactly(samsung2.getId(), samsung1.getId());
+    assertThat(response.content()).extracting(PostSummaryResponse::symbol).containsOnly("005930");
   }
 
   private List<Long> extractIds(List<PostSummaryResponse> content) {

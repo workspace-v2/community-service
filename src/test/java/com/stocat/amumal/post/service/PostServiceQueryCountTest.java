@@ -81,7 +81,7 @@ class PostServiceQueryCountTest {
     Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
     statistics.clear();
 
-    postService.getPostsByCursor(null, 10);
+    postService.getPostsByCursor(null, null, 10);
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(2L);
   }
 

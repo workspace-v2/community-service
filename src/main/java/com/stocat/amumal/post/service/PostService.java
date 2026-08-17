@@ -10,7 +10,7 @@ public interface PostService {
 
   List<PostSummaryResponse> getPostsByOffset(int offset, int limit);
 
-  PostCursorSliceResponse getPostsByCursor(Long cursor, int limit);
+  PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit);
 
   List<PostSummaryResponse> searchPosts(String keyword, int offset, int limit, PostSearchSort sort);
 

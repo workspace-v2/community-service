@@ -73,9 +73,11 @@ public class PostController {
   @GetMapping("/cursor")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<PostCursorSliceResponse> getPostsByCursor(
+      @RequestParam(value = "symbol", required = false) String symbol,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
-    return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPostsByCursor(cursor, limit));
+    return ApiResponse.of(
+        "게시글 목록 조회에 성공했습니다.", postService.getPostsByCursor(symbol, cursor, limit));
   }
 
   @GetMapping("/search")

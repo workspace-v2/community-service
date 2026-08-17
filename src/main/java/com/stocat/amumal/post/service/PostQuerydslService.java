@@ -20,11 +20,11 @@ public class PostQuerydslService {
   private final JPAQueryFactory queryFactory;
 
   public List<Post> findAllByOffset(long offset, long limit) {
-    return basePostListQuery().offset(offset).limit(limit).fetch();
+    return basePostListQuery(null).offset(offset).limit(limit).fetch();
   }
 
-  public List<Post> findAllByCursor(Long cursor, long limit) {
-    return basePostListQuery().where(postIdLt(cursor)).limit(limit).fetch();
+  public List<Post> findAllByCursor(String symbol, Long cursor, long limit) {
+    return basePostListQuery(symbol).where(postIdLt(cursor)).limit(limit).fetch();
   }
 
   public List<Post> searchPosts(String keyword, long offset, long limit, PostSearchSort sort) {
@@ -55,17 +55,22 @@ public class PostQuerydslService {
     return query.fetch();
   }
 
-  private JPAQuery<Post> basePostListQuery() {
+  private JPAQuery<Post> basePostListQuery(String symbol) {
     return queryFactory
         .selectFrom(post)
         // PostSummaryResponse 매핑 시 post.user 접근이 발생하므로 fetch join을 유지한다.
         .join(post.user)
         .fetchJoin()
+        .where(symbolEq(symbol))
         .orderBy(post.id.desc());
   }
 
   private BooleanExpression postIdLt(Long cursor) {
     return cursor != null ? post.id.lt(cursor) : null;
+  }
+
+  private BooleanExpression symbolEq(String symbol) {
+    return symbol != null && !symbol.isBlank() ? post.symbol.eq(symbol.trim()) : null;
   }
 
   private BooleanExpression keywordContains(String keyword) {
