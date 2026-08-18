@@ -12,6 +12,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +24,9 @@ public class JwtProvider {
   // @PostConstruct: 빈 생성 후 1회 실행: secret 문자열을 HMAC(비밀키를 이용한 해시 기반 인증 방식) 서명용 Key 객체로 변환
   @PostConstruct
   public void init() {
+    if (!StringUtils.hasText(jwtProperties.getSecret())) {
+      throw new IllegalStateException("jwt.secret must be configured");
+    }
     this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
   }
 

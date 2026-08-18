@@ -1,0 +1,6 @@
+app:
+  cookie:
+    secure: true
+
+jwt:
+  secret: ${JWT_SECRET}

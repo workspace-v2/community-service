@@ -1,11 +1,17 @@
-# 노출/통계 설정 - 로컬 벤치마크(N+1 쿼리 수, 캐시/커넥션풀 지표 확인)용
 spring:
+  profiles:
+    include: local
+
+# 노출/통계 설정 - 로컬 벤치마크(N+1 쿼리 수, 캐시/커넥션풀 지표 확인)용
   jpa:
     properties:
       hibernate:
         # 세션당 쿼리 실행 횟수를 Hibernate가 직접 집계
         # N+1 검증 테스트에서 SessionFactory.getStatistics().getPrepareStatementCount() 로 확인
         generate_statistics: true
+
+jwt:
+  secret: ${JWT_SECRET:development-only-jwt-secret-key-should-be-overridden-32chars}
 
 management:
   endpoints:
