@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/stocks")
+@RequestMapping("/api/v1/stocks")
 /** 게시글 작성 화면에서 종목을 찾고 선택하기 위한 검색 API */
 public class StockController {
 

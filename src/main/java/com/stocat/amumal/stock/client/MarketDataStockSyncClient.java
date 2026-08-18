@@ -26,7 +26,7 @@ public class MarketDataStockSyncClient implements StockSyncClient {
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path("/stocks/sync")
+                    .path("/internal/v1/stocks/sync")
                     .queryParam("updatedAfter", updatedAfter)
                     .queryParam("limit", limit)
                     .build())
