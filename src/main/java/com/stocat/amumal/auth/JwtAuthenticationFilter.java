@@ -27,6 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     "/v1/users/email/check",
     "/v1/users/nickname/check",
     "/v1/users/upload/profile-image",
+    "/v1/posts",
+    "/v1/posts/cursor",
+    "/v1/posts/search",
+    "/v1/posts/*",
+    "/v1/posts/*/comments",
     "/v1/posts/upload/attach-file"
   };
   private final JwtProvider jwtProvider;
@@ -36,6 +41,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // CORS preflight OPTIONS는 인증 대상이 아니므로 JWT 검사를 건너뛴다.
     // 여기서 401이 나면 브라우저가 실제 cross-origin 요청을 보내지 못한다.
     if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+      return true;
+    }
+    if (HttpMethod.GET.matches(request.getMethod())
+        && PatternMatchUtils.simpleMatch(
+            new String[] {
+              "/v1/posts", "/v1/posts/cursor", "/v1/posts/search", "/v1/posts/*", "/v1/posts/*/comments"
+            },
+            request.getRequestURI())) {
       return true;
     }
     return PatternMatchUtils.simpleMatch(WHITE_LIST, request.getRequestURI());

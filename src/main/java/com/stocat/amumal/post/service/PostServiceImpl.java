@@ -15,7 +15,6 @@ import com.stocat.amumal.post.event.PostViewEventPublisher;
 import com.stocat.amumal.post.repository.PostLikeRepository;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.validator.PostValidator;
-import com.stocat.amumal.user.repository.UserRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ public class PostServiceImpl implements PostService {
   private final PostRepository postRepository;
   private final PostLikeRepository postLikeRepository;
   private final PostQuerydslService postQuerydslService;
-  private final UserRepository userRepository;
   private final PostValidator postValidator;
   private final PostViewService postViewService;
   private final PostViewEventPublisher postViewEventPublisher;
@@ -84,8 +82,6 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(readOnly = true)
   public GetPostResponse getPost(Long postId, Long userId) {
-    userRepository.findById(userId).orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-
     Post post =
         postRepository
             .findById(postId)
@@ -101,7 +97,8 @@ public class PostServiceImpl implements PostService {
                 .getOrDefault(
                     post.getSymbol(),
                     postStockSnapshotService.emptyStockResponse(post.getSymbol()));
-    boolean isLiked = postLikeRepository.existsById(new PostLikeId(postId, userId));
+    boolean isLiked =
+        userId != null && postLikeRepository.existsById(new PostLikeId(postId, userId));
 
     return new GetPostResponse(
         post.getId(),
