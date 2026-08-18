@@ -77,6 +77,9 @@ public class UserServiceImpl implements UserService {
   private void validatePasswordUpdate(UpdatePasswordRequest request) {
     userValidator.validateRequiredPassword(request.currentPassword());
     userValidator.validatePassword(request.password());
+    if (request.currentPassword().equals(request.password())) {
+      throw new ApiException(ErrorCode.NEW_PASSWORD_SAME_AS_CURRENT);
+    }
     if (request.passwordConfirm() != null && !request.passwordConfirm().isBlank()) {
       userValidator.validatePasswordUpdateConfirm(request.password(), request.passwordConfirm());
     }
