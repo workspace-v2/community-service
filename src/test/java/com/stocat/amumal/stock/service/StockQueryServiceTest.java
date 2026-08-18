@@ -93,6 +93,21 @@ class StockQueryServiceTest {
     assertThat(response.hasNext()).isTrue();
   }
 
+  @Test
+  void 조건이_없으면_활성_종목_목록을_카드용으로_조회한다() {
+    when(
+            stockSnapshotRepository.findAllByStatusOrderBySourceUpdatedAtDescSymbolAsc(
+                StockStatus.ACTIVE, Pageable.ofSize(3)))
+        .thenReturn(
+            List.of(stock("005930", "삼성전자"), stock("000660", "SK하이닉스"), stock("035420", "NAVER")));
+
+    StockQueryResponse response = stockQueryService.searchStocks(null, null, 2);
+
+    assertThat(response.items()).hasSize(2);
+    assertThat(response.items().get(0).symbol()).isEqualTo("005930");
+    assertThat(response.hasNext()).isTrue();
+  }
+
   private StockSnapshot stock(String symbol, String name) {
     return StockSnapshot.of(
         symbol,

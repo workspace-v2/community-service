@@ -1,6 +1,7 @@
 package com.stocat.amumal.stock.repository;
 
 import com.stocat.amumal.stock.domain.StockSnapshot;
+import com.stocat.amumal.stock.domain.StockStatus;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
@@ -11,4 +12,7 @@ public interface StockSnapshotRepository extends JpaRepository<StockSnapshot, St
   List<StockSnapshot> findAllBySymbolIn(Collection<String> symbols);
 
   List<StockSnapshot> findAllByNameContainingIgnoreCase(String name, Pageable pageable);
+
+  List<StockSnapshot> findAllByStatusOrderBySourceUpdatedAtDescSymbolAsc(
+      StockStatus status, Pageable pageable);
 }

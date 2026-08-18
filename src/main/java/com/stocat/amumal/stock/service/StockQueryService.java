@@ -3,6 +3,7 @@ package com.stocat.amumal.stock.service;
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.stock.domain.StockSnapshot;
+import com.stocat.amumal.stock.domain.StockStatus;
 import com.stocat.amumal.stock.dto.StockQueryResponse;
 import com.stocat.amumal.stock.dto.StockQuerySummaryResponse;
 import com.stocat.amumal.stock.repository.StockSnapshotRepository;
@@ -57,6 +58,10 @@ public class StockQueryService {
     }
     if (normalizedSymbol != null) {
       return stockSnapshotRepository.findById(normalizedSymbol).stream().toList();
+    }
+    if (normalizedName == null) {
+      return stockSnapshotRepository.findAllByStatusOrderBySourceUpdatedAtDescSymbolAsc(
+          StockStatus.ACTIVE, PageRequest.of(0, limit));
     }
     return stockSnapshotRepository.findAllByNameContainingIgnoreCase(
         normalizedName, PageRequest.of(0, limit));

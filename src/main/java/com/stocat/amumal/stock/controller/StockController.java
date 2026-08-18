@@ -39,7 +39,6 @@ public class StockController {
       @Valid @ModelAttribute StockQueryRequest request) {
     return ApiResponse.of(
         "종목 조회에 성공했습니다.",
-        stockQueryService.searchStocks(
-            request.getSymbol(), request.getName(), request.getLimit()));
+        stockQueryService.searchStocks(request.getSymbol(), request.getName(), request.getLimit()));
   }
 }
