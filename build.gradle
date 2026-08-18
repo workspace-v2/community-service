@@ -40,6 +40,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-mysql'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.security:spring-security-crypto'
+    implementation platform('software.amazon.awssdk:bom:2.32.11')
+    implementation 'software.amazon.awssdk:s3'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
