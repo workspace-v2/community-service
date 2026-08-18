@@ -1,4 +1,11 @@
 app:
+  upload:
+    storage-type: s3
+    s3:
+      bucket: ${S3_BUCKET}
+      region: ${AWS_REGION}
+      prefix: ${S3_UPLOAD_PREFIX:amumal}
+      public-base-url: ${S3_PUBLIC_BASE_URL:}
   cookie:
     secure: true
 

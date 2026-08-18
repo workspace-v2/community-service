@@ -10,11 +10,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.upload.storage-type", havingValue = "local", matchIfMissing = true)
 public class LocalFileStorage implements FileStorage {
 
   private final ImageProperties imageProperties;

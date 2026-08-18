@@ -42,6 +42,7 @@ spring:
 
 app:
   upload:
+    storage-type: local
     base-dir: ./uploads
   stock-sync:
     base-url: ${MARKET_DATA_SERVICE_BASE_URL:http://localhost:8081}

@@ -27,7 +27,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   @Override
+  /** 로컬 디스크 저장소를 사용하는 환경에서만 업로드 디렉토리를 정적 리소스로 노출한다. */
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    if (!"local".equalsIgnoreCase(imageProperties.getStorageType())) {
+      return;
+    }
+
     // ./uploads 같은 상대경로를 절대경로로 변환
     // "file:" 접두사는 Spring이 파일 시스템 경로임을 인식하는 데 필요
     String baseDir = imageProperties.getBaseDir();
@@ -68,16 +73,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         HttpMethod.PATCH.name(),
         HttpMethod.DELETE.name(),
         HttpMethod.OPTIONS.name());
-    addCorsMapping(
-        registry,
-        "/stocks/**",
-        HttpMethod.GET.name(),
-        HttpMethod.OPTIONS.name());
-    addCorsMapping(
-        registry,
-        "/images/**",
-        HttpMethod.GET.name(),
-        HttpMethod.OPTIONS.name());
+    addCorsMapping(registry, "/stocks/**", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
+    addCorsMapping(registry, "/images/**", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
   }
 
   private void addCorsMapping(CorsRegistry registry, String pathPattern, String... allowedMethods) {
