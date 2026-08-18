@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,6 +33,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+    // CORS preflight OPTIONS는 인증 대상이 아니므로 JWT 검사를 건너뛴다.
+    // 여기서 401이 나면 브라우저가 실제 cross-origin 요청을 보내지 못한다.
+    if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+      return true;
+    }
     return PatternMatchUtils.simpleMatch(WHITE_LIST, request.getRequestURI());
   }
 
