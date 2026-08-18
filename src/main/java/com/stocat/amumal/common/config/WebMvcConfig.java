@@ -5,6 +5,7 @@ import com.stocat.amumal.image.config.ImageProperties;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -44,17 +45,51 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
   @Override
   public void addCorsMappings(CorsRegistry registry) {
+    addCorsMapping(
+        registry,
+        "/auth/**",
+        HttpMethod.GET.name(),
+        HttpMethod.POST.name(),
+        HttpMethod.OPTIONS.name());
+    addCorsMapping(
+        registry,
+        "/posts/**",
+        HttpMethod.GET.name(),
+        HttpMethod.POST.name(),
+        HttpMethod.PATCH.name(),
+        HttpMethod.DELETE.name(),
+        HttpMethod.OPTIONS.name());
+    addCorsMapping(
+        registry,
+        "/users/**",
+        HttpMethod.GET.name(),
+        HttpMethod.POST.name(),
+        HttpMethod.PUT.name(),
+        HttpMethod.PATCH.name(),
+        HttpMethod.DELETE.name(),
+        HttpMethod.OPTIONS.name());
+    addCorsMapping(
+        registry,
+        "/stocks/**",
+        HttpMethod.GET.name(),
+        HttpMethod.OPTIONS.name());
+    addCorsMapping(
+        registry,
+        "/images/**",
+        HttpMethod.GET.name(),
+        HttpMethod.OPTIONS.name());
+  }
+
+  private void addCorsMapping(CorsRegistry registry, String pathPattern, String... allowedMethods) {
     registry
-        .addMapping("/**")
+        .addMapping(pathPattern)
         .allowedOrigins(corsProperties.getAllowedOrigins().toArray(String[]::new))
-        .allowedMethods(
-            HttpMethod.GET.name(),
-            HttpMethod.POST.name(),
-            HttpMethod.PUT.name(),
-            HttpMethod.PATCH.name(),
-            HttpMethod.DELETE.name(),
-            HttpMethod.OPTIONS.name())
+        .allowedMethods(allowedMethods)
         .allowCredentials(true)
-        .allowedHeaders("*");
+        .allowedHeaders(
+            HttpHeaders.AUTHORIZATION,
+            HttpHeaders.CONTENT_TYPE,
+            HttpHeaders.ACCEPT,
+            HttpHeaders.ORIGIN);
   }
 }
