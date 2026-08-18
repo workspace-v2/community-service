@@ -34,6 +34,10 @@ public class SeedConfig {
 
   @Transactional
   void seed() {
+    seedUsers();
+  }
+
+  private void seedUsers() {
     if (testUserCount <= 0) {
       return;
     }
