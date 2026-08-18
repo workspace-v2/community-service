@@ -40,3 +40,7 @@ out/
 application-local.yml
 application-local.yaml
 application-local.properties
+
+### 업로드 산출물
+uploads/post-images/
+uploads/profile-images/
