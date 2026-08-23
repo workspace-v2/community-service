@@ -55,10 +55,24 @@
   <img src="" alt="마이페이지 데모" width="80%" max-width="700px" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
 </p>
 
+---
+
 ## Architecture
 
 요청 흐름: `Route 53 → ALB → Nginx → Traefik → Kubernetes Service → Pod`
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5f1c2dbc-b1ed-447f-9d56-bd2e7e08d297" alt="Architecture" width="100%" max-width="900px" />
+</p>
+
+---
+
+## CI/CD Pipeline
+
+--
+
+## ERD
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/07b32ded-658f-4632-b35b-383f826f07b7" alt="Architecture" width="100%" max-width="900px" />
 </p>
