@@ -4,7 +4,22 @@
 
 ---
 
-## Tech Stack
+### 목차
+
+- [Tech Stack](#tech-stack)
+- [주요 기능](#주요-기능)
+    - [1. 로그인 · 회원가입](#1-로그인--회원가입)
+    - [2. 게시글 목록 · 검색](#2-게시글-목록--검색)
+    - [3. 게시글 작성](#3-게시글-작성)
+    - [4. 게시글 상세 및 댓글](#4-게시글-상세-및-댓글)
+    - [5. 마이페이지](#5-마이페이지)
+- [Architecture](#architecture)
+- [GitOps 기반 배포 자동화](#gitops-기반-배포-자동화)
+- [ERD](#erd)
+
+---
+
+### Tech Stack
 
 - Backend  
   ![Java](https://img.shields.io/badge/Java_21-007396?style=flat-square&logo=java&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=spring-boot&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat-square&logo=spring&logoColor=white)
@@ -21,9 +36,9 @@
 - CI/CD  
   ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
 
-## 주요 기능
+### 주요 기능
 
-### 로그인 · 회원가입
+### 1. 로그인 · 회원가입
 
 JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하게 보관해 인증 상태를 유지합니다.
 
@@ -33,7 +48,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 <br/>
 
-### 게시글 목록 · 검색
+### 2. 게시글 목록 · 검색
 
 종목별로 게시글 목록을 무한 스크롤로 이어서 확인할 수 있으며,  
 키워드 검색으로 원하는 종목이나 주제의 게시글만 찾아볼 수 있습니다.
@@ -44,7 +59,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 <br/>
 
-### 게시글 작성
+### 3. 게시글 작성
 
 관심 있는 종목을 선택하고 제목·본문과 이미지를 작성해 게시글을 등록할 수 있습니다.
 
@@ -54,7 +69,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 <br/>
 
-### 게시글 상세 및 댓글
+### 4. 게시글 상세 및 댓글
 
 게시글 본문과 첨부 이미지를 확인하고, 댓글을 작성·수정·삭제하거나 좋아요를 남길 수 있습니다.
 
@@ -64,7 +79,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 <br/>
 
-### 마이페이지
+### 5. 마이페이지
 
 내가 작성한 게시글을 모아보고, 닉네임·프로필 이미지·비밀번호 등 계정 정보를 한 곳에서 관리할 수 있습니다.
 
@@ -74,7 +89,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 ---
 
-## Architecture
+### Architecture
 
 요청 흐름: `Route 53 → ALB → Nginx → Traefik → Kubernetes Service → Pod`
 
@@ -84,7 +99,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 ---
 
-## GitOps 기반 배포 자동화
+### GitOps 기반 배포 자동화
 
 `Push / PR` ➔ `CI (빌드 및 테스트)` ➔ `Docker 이미지 빌드 & GHCR 푸시` ➔ `GitOps Repo 갱신` ➔ `ArgoCD 자동 배포` 순으로 진행됩니다.
 
@@ -98,7 +113,7 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 
 ---
 
-## ERD
+### ERD
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/07b32ded-658f-4632-b35b-383f826f07b7" alt="Architecture" width="100%" max-width="900px" />
