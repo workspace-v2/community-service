@@ -1,0 +1,57 @@
+name: Prune GHCR Image Versions
+
+on:
+  # 현재는 수동 실행만 허용하므로 schedule를 비활성화
+  #  schedule:
+  #    # 매주 일요일 03:21 KST
+  #    # GitHub Actions scheduled workflow가 몰리는 매시 정각을 피함
+  #    - cron: '21 3 * * 0'
+  #      timezone: 'Asia/Seoul'
+
+  workflow_dispatch:
+    inputs:
+      min_versions_to_keep:
+        description: '삭제하지 않고 유지할 최신 이미지 버전 수'
+        required: false
+        default: 30
+        type: number
+
+permissions:
+  packages: write
+
+jobs:
+  prune-ghcr-image:
+    name: Prune old GHCR image versions
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Derive package metadata
+        run: |
+          REPOSITORY_NAME_LOWER=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
+
+          echo "PACKAGE_NAME=$REPOSITORY_NAME_LOWER" >> "$GITHUB_ENV"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "MIN_VERSIONS_TO_KEEP=${{ inputs.min_versions_to_keep }}" >> "$GITHUB_ENV"
+          else
+            echo "MIN_VERSIONS_TO_KEEP=30" >> "$GITHUB_ENV"
+          fi
+
+      # actions/delete-package-versions는 1회 실행당 최대 100개 버전만 삭제할 수 있다.
+      # 삭제 대상이 100개를 초과할 경우 다음 실행까지 남을 수 있으므로 이미지 생성량에 따라 실행 주기를 조절한다.
+      - name: Delete untagged GHCR image versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.PACKAGE_NAME }}
+          package-type: container
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: 'true'
+
+      # untagged 정리 후 남은 이미지에 retention 정책을 적용한다.
+      # 이 단계 역시 한 번 실행당 최대 100개 버전을 삭제한다.
+      - name: Delete old GHCR image versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.PACKAGE_NAME }}
+          package-type: container
+          min-versions-to-keep: ${{ env.MIN_VERSIONS_TO_KEEP }}
