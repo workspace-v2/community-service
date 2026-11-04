@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   prune-ghcr-image:
+    if: ${{ false }} # Legacy pipeline disabled; use burger-ci-cd.yml.
     name: Prune old GHCR image versions
     runs-on: ubuntu-26.04
 

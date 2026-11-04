@@ -1,0 +1,116 @@
+name: Burgerpedia CI and Fargate Blue-Green
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Do not interrupt an in-flight blue/green deployment.
+concurrency:
+  group: burger-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: amumal
+          MYSQL_USER: amumal
+          MYSQL_PASSWORD: ci-password
+          MYSQL_ROOT_PASSWORD: ci-root-password
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deployment script regression tests
+        run: python3 -m unittest discover -s .github/scripts/tests -v
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit and H2 integration tests
+        run: ./gradlew --no-daemon test bootJar
+      - name: MySQL migration and integration tests
+        run: ./gradlew --no-daemon test --rerun-tasks
+        env:
+          SPRING_APPLICATION_JSON: >-
+            {"spring":{"datasource":{"url":"jdbc:mysql://127.0.0.1:3306/amumal?connectionTimeZone=Asia/Seoul","username":"amumal","password":"ci-password","driver-class-name":"com.mysql.cj.jdbc.Driver"}}}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: burger-jar-${{ github.sha }}
+          path: build/libs/*-SNAPSHOT.jar
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: verify
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') &&
+      vars.BURGER_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.BURGER_AWS_REGION || 'ap-northeast-2' }}
+      DEPLOY_ENV: ${{ github.ref_name }}
+      ECS_CLUSTER: burger
+      ECS_SERVICE: burger-${{ github.ref_name }}
+      TASK_FAMILY: burger-${{ github.ref_name }}
+      ECR_REPOSITORY: burger-${{ github.ref_name }}
+      CODEDEPLOY_APPLICATION: burger
+      CODEDEPLOY_GROUP: burger-${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: burger-jar-${{ github.sha }}
+          path: build/libs
+      - name: AWS authentication through branch-scoped OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ github.ref_name == 'main' && vars.BURGER_AWS_ROLE_ARN_MAIN || vars.BURGER_AWS_ROLE_ARN_DEV }}
+          role-session-name: burger-${{ github.ref_name }}-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Require a running environment before deployment
+        run: |
+          set -euo pipefail
+          aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" > /tmp/service.json
+          jq -e '.failures == [] and (.services | length == 1) and (.services[0].desiredCount > 0)' /tmp/service.json >/dev/null || {
+            echo '::error::Start the Burgerpedia environment before deploying. The deployment never starts stopped data servers.'
+            exit 1
+          }
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push immutable revision
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.ecs
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          cache-from: type=gha,scope=burger-${{ github.ref_name }}
+          cache-to: type=gha,mode=max,scope=burger-${{ github.ref_name }}
+      - name: Deploy through CodeDeploy and wait for success
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        run: .github/scripts/deploy-burger.sh
+      - name: Verify public API
+        env:
+          BASE_URL: ${{ github.ref_name == 'main' && vars.BURGER_URL_MAIN || vars.BURGER_URL_DEV }}
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 5 --max-time 30 "$BASE_URL/v1/posts/cursor?limit=1" > /dev/null

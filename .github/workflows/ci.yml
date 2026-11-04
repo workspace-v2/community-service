@@ -12,6 +12,7 @@ on:
 # 실행할 작업을 정의하는 영역입니다.
 jobs:
   build: # 작업의 이름을 "build"로 정의합니다.
+    if: ${{ false }} # Legacy pipeline disabled; use burger-ci-cd.yml.
     runs-on: ubuntu-26.04
 
     services:

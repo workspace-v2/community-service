@@ -18,6 +18,9 @@ import org.springframework.web.util.WebUtils;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private static final String[] WHITE_LIST = {
+    "/actuator/health",
+    "/actuator/health/*",
+    "/actuator/prometheus",
     "/v1/actuator/health",
     "/v1/actuator/health/*",
     "/v1/auth/login",

@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   Deploy:
+    if: ${{ false }} # Legacy pipeline disabled; use burger-ci-cd.yml.
     name: Deploy via SSM
     runs-on: ubuntu-26.04
 

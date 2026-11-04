@@ -3,6 +3,7 @@ package com.stocat.amumal.stock.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @Profile("!test")
+@ConditionalOnProperty(
+    prefix = "app.stock-sync", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class StockSyncScheduler {
 
