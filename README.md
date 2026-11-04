@@ -118,3 +118,26 @@ JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하�
 <p align="center">
   <img src="https://github.com/user-attachments/assets/07b32ded-658f-4632-b35b-383f826f07b7" alt="Architecture" width="100%" max-width="900px" />
 </p>
+
+
+### 로컬 데이터베이스
+
+MySQL 8.0을 사용합니다. `amumal` 데이터베이스와 해당 DB에 접근할 사용자를 준비하고,
+다음 환경변수를 설정합니다.
+
+```sh
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_NAME=amumal
+export DB_USERNAME=amumal
+export DB_PASSWORD='your-local-password'
+```
+
+기본 문자셋은 `utf8mb4`를 권장합니다. Flyway가 빈 데이터베이스에 스키마를 생성합니다.
+개발 프로필은 `application-local.yml`을 포함하므로 로컬 설정 파일도 준비해야 합니다.
+Redis 등 나머지 연결 설정은 실행 환경에 맞게 지정합니다.
+
+기본 테스트는 H2의 MySQL 호환 모드로 실행합니다. CI에서는 실제 MySQL에 대해서도
+동일한 테스트를 실행해 마이그레이션과 JPA 스키마 검증을 확인합니다.
+이 저장소의 마이그레이션은 새 MySQL 데이터베이스를 위한 초기 구성입니다.
+기존 데이터베이스의 데이터 이관은 별도 작업이 필요합니다.
