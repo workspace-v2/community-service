@@ -1,143 +1,90 @@
-# StockTalk
+# Burgerpedia — 버거 리뷰와 검색 커뮤니티
 
-주식 종목별 게시글과 댓글을 공유하는 주식 커뮤니티 서비스입니다.
+기존 `Post`와 `/v1/posts` CRUD를 버거 리뷰 게시글로 전환했다. 별도의 Review 엔티티·CRUD는 없다. 메뉴 정보와 리뷰 게시글을 MySQL LIKE로 검색하는 기준 구현이며, Elasticsearch 도입 전 성능·품질 비교의 출발점이다.
 
----
+Java 21, Spring Boot, JPA/Querydsl, MySQL, Redis를 사용한다. Elasticsearch/Nori/BM25/Outbox는 아직 구현하지 않았다. Redis는 기존 로그인 토큰·조회수·캐시 용도다. `market-data-service`에 대한 호출과 종목 동기화는 이 서비스에서 제거했다.
 
-### 목차
+## 도메인과 데이터 보존
 
-- [Tech Stack](#tech-stack)
-- [주요 기능](#주요-기능)
-    - [1. 로그인 · 회원가입](#1-로그인--회원가입)
-    - [2. 게시글 목록 · 검색](#2-게시글-목록--검색)
-    - [3. 게시글 작성](#3-게시글-작성)
-    - [4. 게시글 상세 및 댓글](#4-게시글-상세-및-댓글)
-    - [5. 마이페이지](#5-마이페이지)
-- [Architecture](#architecture)
-- [GitOps 기반 배포 자동화](#gitops-기반-배포-자동화)
-- [ERD](#erd)
+- `brand` → `menu` → `post`: 하나의 메뉴에 여러 버거 리뷰가 연결된다.
+- 새 리뷰에는 `menuId`, 정수 평점 `rating`(1~5), 제목·본문이 필요하다. 태그는 선택이며 생략하면 빈 집합이다.
+- 메뉴 연결은 작성 후 바꿀 수 없다. 수정에서는 평점·태그·제목·본문·이미지를 함께 전달한다. 태그 생략 시 기존 태그가 비워진다.
+- 기존 댓글·좋아요·이미지 매핑·조회수 처리를 재사용한다. 기존 댓글·좋아요·이미지 매핑 삭제 처리에는 변경을 추가하지 않는다. 새 태그는 Post의 요소 컬렉션으로 관리한다.
+- V1~V5는 이미 적용된 이력으로 보존하고 V6가 카탈로그와 리뷰 컬럼을 추가한다. 기존 종목 게시글에 임의의 메뉴나 평점을 부여하지 않는다. 기존 행·symbol·stock 테이블은 DB에 보존하지만 버거 목록·검색·상세·수정에는 노출하지 않는다. 과거 글의 수동 매핑/보관 정책은 별도 작업이다.
+- `menu.sourceType`은 `REAL` 또는 `SYNTHETIC`이다. `REAL`에는 출처 URL이 필수다. 가격은 원 단위 정수이며 미확인 가격은 NULL이다. 실제 브랜드·메뉴 수집과 대규모 리뷰 생성은 아직 수행하지 않았다.
 
----
+## HTTP API
 
-### Tech Stack
+기본 경로는 `/v1`, 응답은 기존 `{code, message, data}` 형식이다. 카탈로그·리뷰 GET은 공개다. 리뷰 쓰기의 기존 인증 경로는 그대로 유지한다. 기존 JWT 필터가 `/posts` 쓰기도 제외하여 사용자 ID가 전달되지 않는 문제는 이번 기능 추가에서 수정하지 않는다.
 
-- Backend  
-  ![Java](https://img.shields.io/badge/Java_21-007396?style=flat-square&logo=java&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=spring-boot&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat-square&logo=spring&logoColor=white)
+| 메서드·경로 | 내용 |
+|---|---|
+| GET `/brands?offset=0&limit=20` | 브랜드 목록 |
+| GET `/menus?keyword=치즈&brandId=1&maxPrice=7000&sort=relevance` | 메뉴명·설명·브랜드명 LIKE 검색, 브랜드·가격 필터 |
+| GET `/menus/{menuId}` | 메뉴 상세·데이터 출처 |
+| POST `/posts` | 기존 게시글 작성 경로로 버거 리뷰 생성 |
+| PATCH `/posts/{postId}` | 기존 게시글 수정 경로로 리뷰 수정 |
+| DELETE `/posts/{postId}` | 기존 게시글 삭제 경로로 리뷰 삭제 |
+| GET `/posts/{postId}` | 메뉴·브랜드·평점·태그를 포함한 리뷰 상세 |
+| GET `/posts?offset=0&limit=10` | 리뷰 목록 |
+| GET `/posts/cursor?menuId=1&limit=10&cursor=123` | 메뉴별 커서 목록, menuId 생략 시 전체 |
+| GET `/posts/search?keyword=치즈&menuId=1&offset=0&limit=10&sort=relevance` | 리뷰 제목·본문·메뉴명·브랜드명·태그 검색 |
+| GET `/search?keyword=치즈&menuOffset=0&reviewOffset=0&limit=10&sort=relevance` | 메뉴와 리뷰를 함께 반환, 각각 독립 페이지 |
 
-- Storage  
-  ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white) ![AWS S3](https://img.shields.io/badge/AWS_S3-569A31?style=flat-square&logo=amazons3&logoColor=white)
+`limit`은 1~100, offset은 0~10000, 검색어는 공백 제외 1~100자다. 검색어 앞뒤 공백을 제거한다. 메뉴 목록의 keyword는 생략할 수 있다. 응답의 `hasNext`는 limit+1개를 조회해 결정하며 총 개수 쿼리는 수행하지 않는다.
 
-- Infra  
-  ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white) ![Helm](https://img.shields.io/badge/Helm-0F1689?style=flat-square&logo=helm&logoColor=white) ![ArgoCD](https://img.shields.io/badge/ArgoCD-EF7B4D?style=flat-square&logo=argo&logoColor=white) ![Traefik](https://img.shields.io/badge/Traefik-24A1C1?style=flat-square&logo=traefikproxy&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonwebservices&logoColor=white)
+`sort`는 `recent` 또는 `relevance`다. relevance는 제목(메뉴는 이름) 포함 우선, 다음 본문(메뉴는 설명) 포함, 마지막 ID 내림차순이다. BM25 점수나 메뉴·리뷰를 섞은 전역 순위가 아니다. 통합 응답은 `data.menus`, `data.reviews` 두 묶음이며 각 offset과 hasNext를 반환한다.
 
-- Monitoring  
-  ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=grafana&logoColor=white) ![Loki](https://img.shields.io/badge/Loki-F46800?style=flat-square&logo=grafana&logoColor=white) ![Vector](https://img.shields.io/badge/Vector-000000?style=flat-square)
+작성 예시:
 
-- CI/CD  
-  ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
-
-### 주요 기능
-
-### 1. 로그인 · 회원가입
-
-JWT 액세스/리프레시 토큰을 발급하고, HttpOnly 쿠키로 안전하게 보관해 인증 상태를 유지합니다.
-
-<p align="center">
-  <img src="" alt="로그인 및 회원가입 데모" width="80%" max-width="700px" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-</p>
-
-<br/>
-
-### 2. 게시글 목록 · 검색
-
-종목별로 게시글 목록을 무한 스크롤로 이어서 확인할 수 있으며,  
-키워드 검색으로 원하는 종목이나 주제의 게시글만 찾아볼 수 있습니다.
-
-<p align="center">
-  <img src="" alt="게시글 목록 및 검색 데모" width="80%" max-width="700px" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-</p>
-
-<br/>
-
-### 3. 게시글 작성
-
-관심 있는 종목을 선택하고 제목·본문과 이미지를 작성해 게시글을 등록할 수 있습니다.
-
-<p align="center">
-  <img src="" alt="게시글 작성 데모" width="80%" max-width="700px" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-</p>
-
-<br/>
-
-### 4. 게시글 상세 및 댓글
-
-게시글 본문과 첨부 이미지를 확인하고, 댓글을 작성·수정·삭제하거나 좋아요를 남길 수 있습니다.
-
-<p align="center">
-  <img src="" alt="게시글 상세 및 댓글 데모" width="80%" max-width="700px" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-</p>
-
-<br/>
-
-### 5. 마이페이지
-
-내가 작성한 게시글을 모아보고, 닉네임·프로필 이미지·비밀번호 등 계정 정보를 한 곳에서 관리할 수 있습니다.
-
-<p align="center">
-  <img src="" alt="마이페이지 데모" width="80%" max-width="700px" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-</p>
-
----
-
-### Architecture
-
-요청 흐름: `Route 53 → ALB → Nginx → Traefik → Kubernetes Service → Pod`
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/5f1c2dbc-b1ed-447f-9d56-bd2e7e08d297" alt="Architecture" width="100%" max-width="900px" />
-</p>
-
----
-
-### GitOps 기반 배포 자동화
-
-`Push / PR` ➔ `CI (빌드 및 테스트)` ➔ `Docker 이미지 빌드 & GHCR 푸시` ➔ `GitOps Repo 갱신` ➔ `ArgoCD 자동 배포` 순으로 진행됩니다.
-
-| Workflow               | Trigger                              | 수행 역할                                               |
-|:-----------------------|:-------------------------------------|:----------------------------------------------------|
-| `ci.yml`               | `main`, `dev` Push <br> `main` 대상 PR | 애플리케이션 빌드 및 자동화 테스트 (CI)                            |
-| `publish-image.yml`    | 수동 실행 (Workflow Dispatch)            | Docker 이미지 빌드 후 GitHub Container Registry(GHCR)에 푸시 |
-| `update-gitops.yml`    | `publish-image.yml` 성공 시             | GitOps 레포지토리(`k8s-pilot`)의 Helm values 이미지 태그 갱신    |
-| **ArgoCD Sync**        | GitOps 레포지토리 변경 감지                   | 변경된 매니페스트를 K8s 클러스터에 자동 동기화 및 배포 (CD)               |
-| `prune-ghcr-image.yml` | 매주 일요일 03:21 (KST)                   | 미태그 이미지 삭제 및 최신 30개 태그 유지 (스토리지 최적화)                |
-
----
-
-### ERD
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/07b32ded-658f-4632-b35b-383f826f07b7" alt="Architecture" width="100%" max-width="900px" />
-</p>
-
-
-### 로컬 데이터베이스
-
-MySQL 8.0을 사용합니다. `amumal` 데이터베이스와 해당 DB에 접근할 사용자를 준비하고,
-다음 환경변수를 설정합니다.
-
-```sh
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_NAME=amumal
-export DB_USERNAME=amumal
-export DB_PASSWORD='your-local-password'
+```json
+{
+  "menuId": 1,
+  "rating": 4,
+  "tags": ["CHEESY", "THICK_PATTY"],
+  "title": "두꺼운 패티가 좋았던 버거",
+  "content": "치즈 맛이 진하고 패티에 육즙이 있었다.",
+  "attachFileUrl": null
+}
 ```
 
-기본 문자셋은 `utf8mb4`를 권장합니다. Flyway가 빈 데이터베이스에 스키마를 생성합니다.
-개발 프로필은 `application-local.yml`을 포함하므로 로컬 설정 파일도 준비해야 합니다.
-Redis 등 나머지 연결 설정은 실행 환경에 맞게 지정합니다.
+수정은 위 필드 중 menuId를 제외한다. 허용 태그: `SPICY`(매콤), `THICK_PATTY`(두꺼운 패티), `GOOD_VALUE`(가성비), `CHEESY`(치즈), `JUICY`(육즙), `CRISPY`(바삭), `HANDMADE`(수제버거). 한글 태그 라벨에 포함되는 검색어나 enum 이름으로도 리뷰를 찾을 수 있다. 태그는 작성자의 평가이며 재료 사실 정보가 아니다.
 
-기본 테스트는 H2의 MySQL 호환 모드로 실행합니다. CI에서는 실제 MySQL에 대해서도
-동일한 테스트를 실행해 마이그레이션과 JPA 스키마 검증을 확인합니다.
-이 저장소의 마이그레이션은 새 MySQL 데이터베이스를 위한 초기 구성입니다.
-기존 데이터베이스의 데이터 이관은 별도 작업이 필요합니다.
+현재 LIKE는 입력 문자열의 포함 여부를 검사한다. 자연어 문장의 의도·동의어·유사 메뉴·재료 제외는 해석하지 않는다. 예를 들어 “피클 없는”을 문자열 검색하는 것은 피클이 없음을 보장하지 않는다. 이 한계를 정답 질의와 함께 측정한 뒤 분석기·검색 모델·재료 구조를 개선한다.
+
+## 로컬 실행과 데이터
+
+Java 21, MySQL 8.0, Redis 7.2 환경을 준비한다. 개발 환경은 별도 `local` 설정을 참조하므로 없으면 include를 비운다.
+
+```sh
+export DB_HOST=127.0.0.1 DB_PORT=3306 DB_NAME=amumal DB_USERNAME=amumal
+export DB_PASSWORD='로컬 DB 비밀번호'
+export REDIS_HOST=127.0.0.1 REDIS_PORT=6379 REDIS_SSL_ENABLED=false
+SPRING_PROFILES_INCLUDE= ./gradlew bootRun
+```
+
+시작 시 Flyway V6까지 적용한다. 브랜드·메뉴 관리 CRUD는 만들지 않았고 운영 데이터는 출처를 검증한 후 별도 SQL/데이터 적재 과정으로 넣는다. 빠른 개발 확인에는 아래 합성 데이터 3건을 사용할 수 있다. 자동으로 시드하지 않으며, 실행 대상 DB를 확인한 뒤 한 번 넣는다.
+
+```sh
+mysql -h 127.0.0.1 -u amumal -p amumal < scripts/seed-burger-demo.sql
+```
+
+`GET /v1/menus`에서 실제 발급된 ID를 확인하고 리뷰에 사용한다. 합성 데이터는 검색 실험용 실측 자료나 실제 메뉴로 간주하지 않는다.
+
+## 최적화 이전의 기능 추가 기준선
+
+기존 작성자 fetch join과 커서 페이지네이션만 유지한다. 새 메뉴·브랜드·태그는 기본 지연 조회를 사용하며, fetch join·batch fetch·검색용 복합 인덱스를 추가하지 않는다. SQL 실행 횟수를 줄이는 목표나 성능 개선 주장은 없다. 데이터 규모를 늘리고 실제 쿼리 수와 지연을 측정한 뒤 최적화는 별도 변경으로 진행한다.
+
+기존 인증 경로 문제와 댓글·좋아요·이미지 매핑이 있는 게시글의 삭제 제약 문제도 기존 상태로 남긴다. 새 도메인 필드의 유효성 검사와 정상 조회를 위한 변경만 포함한다.
+
+## 검증과 다음 단계
+
+```sh
+./gradlew test spotlessCheck bootJar
+```
+
+테스트는 기존 커서 페이지 누락·중복과 조회수 flush를 유지하며 메뉴 필터·평점·태그 갱신·서비스 계층 작성자 권한·통합 검색·기존 행 보존을 검증한다. 리뷰 HTTP 쓰기 테스트는 사용자 ID가 이미 해석된 요청으로 새 필드를 확인하며 실제 로그인 인증 흐름을 검증하지 않는다. 기본은 MySQL 모드 H2이며 실제 MySQL에서도 별도로 실행한다.
+
+다음 순서는 메뉴 출처 수집/정제 → 재현 가능한 합성 리뷰와 정답 질의 구축 → LIKE 실행 계획과 p95/p99·RPS 측정 → 같은 조건의 Elasticsearch 비교 → Nori/BM25 품질 튜닝 → 동기화 장애 실험이다. 측정 전 성능 개선 수치를 주장하지 않는다.
+
+배포와 서버 켜기/끄기는 [DEPLOYMENT.md](DEPLOYMENT.md)를 참고한다. 이 도메인 변경을 AWS에 배포하려면 별도 푸시·배포가 필요하며, 중지된 서버를 켜면 배포 전까지 기존 이미지가 실행된다.

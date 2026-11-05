@@ -19,3 +19,9 @@ BURGER_URL_MAIN / BURGER_URL_DEV / BURGER_AWS_REGION도 Terraform 스크립트�
 
 전원 스크립트로 꺼 둔 환경은 CI/CD가 자동으로 켜지 않습니다.
 블루·그린 배포 중에도 DB는 공유하므로 마이그레이션은 이전/새 버전과 모두 호환돼야 합니다.
+
+## 버거 리뷰 전환 이후
+
+게시글 API는 `/v1/posts`를 유지하고 menuId·rating·tags를 사용한다. 메뉴/리뷰 통합 검색은 `/v1/search`다. 배포 시 V6가 실행되며 기존 종목 데이터는 보존하고 버거 검색에서 제외한다. 상세 계약과 개발용 합성 카탈로그 적재는 README를 참고한다. 이 서비스는 더 이상 market-data-service를 호출하지 않는다.
+
+전체 서버 중지에는 `burger-power.sh all stop` 외에 공통 `env-power.sh monitoring stop`, `env-power.sh load-generator stop`도 필요하다. 중지 시 ALB와 저장 데이터는 유지되므로 해당 리소스 요금은 남는다.
