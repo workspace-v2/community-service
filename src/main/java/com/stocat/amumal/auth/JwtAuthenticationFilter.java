@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (HttpMethod.GET.matches(request.getMethod())
         && PatternMatchUtils.simpleMatch(
             new String[] {
-              "/v1/posts", "/v1/posts/cursor", "/v1/posts/search", "/v1/posts/*", "/v1/posts/*/comments"
+              "/v1/brands", "/v1/menus", "/v1/menus/*", "/v1/search", "/v1/posts", "/v1/posts/cursor", "/v1/posts/search", "/v1/posts/*", "/v1/posts/*/comments"
             },
             request.getRequestURI())) {
       return true;

@@ -73,7 +73,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
         HttpMethod.PATCH.name(),
         HttpMethod.DELETE.name(),
         HttpMethod.OPTIONS.name());
-    addCorsMapping(registry, "/api/v1/stocks/**", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
+    addCorsMapping(registry, "/brands/**", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
+    addCorsMapping(registry, "/menus/**", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
+    addCorsMapping(registry, "/search", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
     addCorsMapping(registry, "/images/**", HttpMethod.GET.name(), HttpMethod.OPTIONS.name());
   }
 
