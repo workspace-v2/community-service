@@ -19,8 +19,11 @@ import com.stocat.amumal.post.usecase.CreatePostUseCase;
 import com.stocat.amumal.post.usecase.UpdatePostUseCase;
 import com.stocat.amumal.post.usecase.UploadPostImageUseCase;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -62,46 +65,46 @@ public class PostController {
             .path("/{postId}")
             .buildAndExpand(response.id())
             .toUri();
-    return ResponseEntity.created(location).body(ApiResponse.of("게시글이 생성되었습니다.", response));
+    return ResponseEntity.created(location).body(ApiResponse.of("버거 리뷰가 생성되었습니다.", response));
   }
 
   // TODO: @Deprecated
   @GetMapping
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<List<PostSummaryResponse>> getPosts(
-      @RequestParam(value = "offset", defaultValue = "0") int offset,
-      @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
-    return ApiResponse.of("게시글 목록 조회에 성공했습니다.", postService.getPostsByOffset(offset, limit));
+      @Min(0) @Max(10000) @RequestParam(value = "offset", defaultValue = "0") int offset,
+      @Positive @Max(100) @RequestParam(value = "limit", defaultValue = "10") int limit) {
+    return ApiResponse.of("버거 리뷰 목록 조회에 성공했습니다.", postService.getPostsByOffset(offset, limit));
   }
 
   @GetMapping("/cursor")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<PostCursorSliceResponse> getPostsByCursor(
-      @Pattern(regexp = "\\d{6}") @RequestParam(value = "symbol", required = false) String symbol,
-      @RequestParam(value = "cursor", required = false) Long cursor,
-      @Positive @RequestParam(value = "limit", defaultValue = "10") int limit) {
+      @Positive @RequestParam(value = "menuId", required = false) Long menuId,
+      @Positive @RequestParam(value = "cursor", required = false) Long cursor,
+      @Positive @Max(100) @RequestParam(value = "limit", defaultValue = "10") int limit) {
     return ApiResponse.of(
-        "게시글 목록 조회에 성공했습니다.", postService.getPostsByCursor(symbol, cursor, limit));
+        "버거 리뷰 목록 조회에 성공했습니다.", postService.getPostsByCursor(menuId, cursor, limit));
   }
 
   @GetMapping("/search")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<PostSearchSliceResponse> searchPosts(
-      @Pattern(regexp = "\\d{6}") @RequestParam(value = "symbol", required = false) String symbol,
-      @RequestParam("keyword") String keyword,
-      @RequestParam(value = "offset", defaultValue = "0") int offset,
-      @Positive @RequestParam(value = "limit", defaultValue = "10") int limit,
+      @Positive @RequestParam(value = "menuId", required = false) Long menuId,
+      @NotBlank @Size(max = 100) @RequestParam("keyword") String keyword,
+      @Min(0) @Max(10000) @RequestParam(value = "offset", defaultValue = "0") int offset,
+      @Positive @Max(100) @RequestParam(value = "limit", defaultValue = "10") int limit,
       @RequestParam(value = "sort", defaultValue = "recent") String sort) {
     PostSearchSort searchSort = PostSearchSort.from(sort);
     return ApiResponse.of(
-        "게시글 검색에 성공했습니다.", postService.searchPosts(symbol, keyword, offset, limit, searchSort));
+        "버거 리뷰 검색에 성공했습니다.", postService.searchPosts(menuId, keyword, offset, limit, searchSort));
   }
 
   @GetMapping("/{post_id}")
   @ResponseStatus(HttpStatus.OK)
   public ApiResponse<GetPostResponse> getPost(
       @Positive @PathVariable("post_id") Long postId, @AuthUserId Long userId) {
-    return ApiResponse.of("게시글 조회에 성공했습니다.", postService.getPost(postId, userId));
+    return ApiResponse.of("버거 리뷰 조회에 성공했습니다.", postService.getPost(postId, userId));
   }
 
   @DeleteMapping("/{post_id}")
@@ -116,7 +119,7 @@ public class PostController {
       @Positive @PathVariable("post_id") Long postId,
       @AuthUserId Long userId,
       @Valid @RequestBody UpdatePostRequest request) {
-    return ApiResponse.of("게시글이 수정되었습니다.", updatePostUseCase.execute(postId, userId, request));
+    return ApiResponse.of("버거 리뷰가 수정되었습니다.", updatePostUseCase.execute(postId, userId, request));
   }
 
   @PostMapping("/{post_id}/likes")

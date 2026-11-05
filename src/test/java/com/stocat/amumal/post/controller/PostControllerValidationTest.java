@@ -20,33 +20,32 @@ class PostControllerValidationTest {
   @Autowired private Validator validator;
 
   @Test
-  @DisplayName("커서 게시글 목록 조회에서 symbol 형식이 잘못되면 제약 조건 위반이 발생한다")
+  @DisplayName("커서 게시글 목록 조회에서 메뉴 ID가 잘못되면 제약 조건 위반이 발생한다")
   void getPostsByCursorRejectsInvalidSymbolFormat() throws Exception {
     PostController controller = newController();
     Method method =
-        PostController.class.getMethod("getPostsByCursor", String.class, Long.class, int.class);
+        PostController.class.getMethod("getPostsByCursor", Long.class, Long.class, int.class);
 
     Set<ConstraintViolation<PostController>> violations =
         validator
             .forExecutables()
-            .validateParameters(controller, method, new Object[] {"abc", null, 10});
+            .validateParameters(controller, method, new Object[] {-1L, null, 10});
 
     assertThat(violations).isNotEmpty();
   }
 
   @Test
-  @DisplayName("게시글 검색에서 symbol 형식이 잘못되면 제약 조건 위반이 발생한다")
+  @DisplayName("게시글 검색에서 메뉴 ID가 잘못되면 제약 조건 위반이 발생한다")
   void searchPostsRejectsInvalidSymbolFormat() throws Exception {
     PostController controller = newController();
     Method method =
         PostController.class.getMethod(
-            "searchPosts", String.class, String.class, int.class, int.class, String.class);
+            "searchPosts", Long.class, String.class, int.class, int.class, String.class);
 
     Set<ConstraintViolation<PostController>> violations =
         validator
             .forExecutables()
-            .validateParameters(
-                controller, method, new Object[] {"12345", "test", 0, 10, "recent"});
+            .validateParameters(controller, method, new Object[] {0L, "test", 0, 10, "recent"});
 
     assertThat(violations).isNotEmpty();
   }
@@ -65,13 +64,13 @@ class PostControllerValidationTest {
 
       @Override
       public com.stocat.amumal.post.dto.PostCursorSliceResponse getPostsByCursor(
-          String symbol, Long cursor, int limit) {
+          Long menuId, Long cursor, int limit) {
         throw new UnsupportedOperationException();
       }
 
       @Override
       public com.stocat.amumal.post.dto.PostSearchSliceResponse searchPosts(
-          String symbol,
+          Long menuId,
           String keyword,
           int offset,
           int limit,

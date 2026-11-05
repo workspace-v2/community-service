@@ -10,18 +10,21 @@ import org.springframework.stereotype.Component;
 public class PostValidator {
 
   public void validateCreatePost(CreatePostRequest request) {
-    validateSymbol(request.symbol());
+    if (request.menuId() == null || request.menuId() <= 0)
+      throw new ApiException(ErrorCode.MENU_NOT_FOUND);
+    validateRating(request.rating());
     validateTitleAndContent(request.title(), request.content());
     validateSingleImage(request.image());
   }
 
   public void validateListSize(int size) {
-    if (size <= 0) {
+    if (size <= 0 || size > 100) {
       throw new ApiException(ErrorCode.INVALID_PAGE_SIZE);
     }
   }
 
   public void validateUpdatePost(UpdatePostRequest request) {
+    validateRating(request.rating());
     validateTitle(request.title());
     validateContent(request.content());
     validateSingleImage(request.image());
@@ -33,16 +36,6 @@ public class PostValidator {
     }
 
     validateTitleLength(title);
-  }
-
-  private void validateSymbol(String symbol) {
-    if (isBlank(symbol)) {
-      throw new ApiException(ErrorCode.EMPTY_POST_SYMBOL);
-    }
-
-    if (!symbol.trim().matches("\\d{6}")) {
-      throw new ApiException(ErrorCode.INVALID_POST_SYMBOL_FORMAT);
-    }
   }
 
   private void validateTitle(String title) {
@@ -69,6 +62,20 @@ public class PostValidator {
     if (image != null && image.contains(",")) {
       throw new ApiException(ErrorCode.TOO_MANY_IMAGES);
     }
+  }
+
+  private void validateRating(Integer rating) {
+    if (rating == null || rating < 1 || rating > 5)
+      throw new ApiException(ErrorCode.INVALID_REVIEW_RATING);
+  }
+
+  public void validateSearch(String keyword, int offset, int limit) {
+    validateListSize(limit);
+    if (keyword == null
+        || keyword.isBlank()
+        || keyword.length() > 100
+        || offset < 0
+        || offset > 10000) throw new ApiException(ErrorCode.INVALID_SEARCH);
   }
 
   private boolean isBlank(String value) {

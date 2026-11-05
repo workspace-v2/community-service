@@ -9,15 +9,12 @@ import com.stocat.amumal.post.dto.GetPostResponse;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
 import com.stocat.amumal.post.dto.PostSearchSliceResponse;
 import com.stocat.amumal.post.dto.PostSearchSort;
-import com.stocat.amumal.post.dto.PostStockResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.event.PostViewEventPublisher;
 import com.stocat.amumal.post.repository.PostLikeRepository;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.validator.PostValidator;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +29,6 @@ public class PostServiceImpl implements PostService {
   private final PostValidator postValidator;
   private final PostViewService postViewService;
   private final PostViewEventPublisher postViewEventPublisher;
-  private final PostStockSnapshotService postStockSnapshotService;
 
   // DB 기준 조회수에 Redis delta를 더해 현재 표시값을 계산
   private long getViewCount(Post post) {
@@ -43,19 +39,17 @@ public class PostServiceImpl implements PostService {
   @Transactional(readOnly = true)
   public List<PostSummaryResponse> getPostsByOffset(int offset, int limit) {
     postValidator.validateListSize(limit);
+    if (offset < 0 || offset > 10000) throw new ApiException(ErrorCode.INVALID_SEARCH);
 
     return toPostSummaryResponses(postQuerydslService.findAllByOffset(offset, limit));
   }
 
   @Override
   @Transactional(readOnly = true)
-  public PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit) {
+  public PostCursorSliceResponse getPostsByCursor(Long menuId, Long cursor, int limit) {
     postValidator.validateListSize(limit);
-    if (symbol != null && !postStockSnapshotService.existsSymbol(symbol)) {
-      return new PostCursorSliceResponse(List.of(), null, false);
-    }
 
-    List<Post> posts = postQuerydslService.findAllByCursor(symbol, cursor, limit + 1);
+    List<Post> posts = postQuerydslService.findAllByCursor(menuId, cursor, limit + 1);
     boolean hasNext = posts.size() > limit;
     List<Post> pagePosts = hasNext ? posts.subList(0, limit) : posts;
     Long nextCursor = hasNext ? pagePosts.getLast().getId() : null;
@@ -66,13 +60,12 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(readOnly = true)
   public PostSearchSliceResponse searchPosts(
-      String symbol, String keyword, int offset, int limit, PostSearchSort sort) {
+      Long menuId, String keyword, int offset, int limit, PostSearchSort sort) {
     postValidator.validateListSize(limit);
-    if (symbol != null && !postStockSnapshotService.existsSymbol(symbol)) {
-      return new PostSearchSliceResponse(List.of(), offset, limit, false);
-    }
 
-    List<Post> posts = postQuerydslService.searchPosts(symbol, keyword, offset, limit + 1, sort);
+    postValidator.validateSearch(keyword, offset, limit);
+    keyword = keyword.trim();
+    List<Post> posts = postQuerydslService.searchPosts(menuId, keyword, offset, limit + 1, sort);
     boolean hasNext = posts.size() > limit;
     List<Post> pagePosts = hasNext ? posts.subList(0, limit) : posts;
 
@@ -87,24 +80,20 @@ public class PostServiceImpl implements PostService {
             .findById(postId)
             .orElseThrow(() -> new ApiException(ErrorCode.POST_NOT_FOUND));
 
+    if (post.getMenu() == null || post.isDeleted())
+      throw new ApiException(ErrorCode.POST_NOT_FOUND);
     postViewEventPublisher.publishEvent(post.getId());
 
-    PostStockResponse stock =
-        post.getSymbol() == null
-            ? postStockSnapshotService.emptyStockResponse(null)
-            : postStockSnapshotService
-                .getExistingStockResponses(Collections.singletonList(post.getSymbol()))
-                .getOrDefault(
-                    post.getSymbol(),
-                    postStockSnapshotService.emptyStockResponse(post.getSymbol()));
     boolean isLiked =
         userId != null && postLikeRepository.existsById(new PostLikeId(postId, userId));
 
     return new GetPostResponse(
         post.getId(),
-        stock.symbol(),
-        stock.stockName(),
-        stock.market(),
+        post.getMenu().getId(),
+        post.getMenu().getName(),
+        post.getMenu().getBrand().getName(),
+        post.getRating(),
+        java.util.Set.copyOf(post.getTags()),
         post.getUser().getId(),
         post.getUser().getId(),
         post.getTitle(),
@@ -135,26 +124,17 @@ public class PostServiceImpl implements PostService {
   }
 
   private List<PostSummaryResponse> toPostSummaryResponses(List<Post> posts) {
-    Map<String, PostStockResponse> stocks =
-        postStockSnapshotService.getExistingStockResponses(
-            posts.stream().map(Post::getSymbol).toList());
-
-    return posts.stream().map(post -> toPostSummaryResponse(post, stocks)).toList();
+    return posts.stream().map(this::toPostSummaryResponse).toList();
   }
 
-  private PostSummaryResponse toPostSummaryResponse(
-      Post post, Map<String, PostStockResponse> stocks) {
-    PostStockResponse stock =
-        post.getSymbol() == null
-            ? postStockSnapshotService.emptyStockResponse(null)
-            : stocks.getOrDefault(
-                post.getSymbol(), postStockSnapshotService.emptyStockResponse(post.getSymbol()));
-
+  private PostSummaryResponse toPostSummaryResponse(Post post) {
     return new PostSummaryResponse(
         post.getId(),
-        stock.symbol(),
-        stock.stockName(),
-        stock.market(),
+        post.getMenu().getId(),
+        post.getMenu().getName(),
+        post.getMenu().getBrand().getName(),
+        post.getRating(),
+        java.util.Set.copyOf(post.getTags()),
         post.getTitle(),
         post.getCreatedAt().format(DateTimeConstants.DATE_TIME_FORMATTER),
         post.getLikeCount(),

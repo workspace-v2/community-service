@@ -42,6 +42,16 @@ public class GlobalExceptionHandler {
         .body(ApiResponse.of("INVALID_INPUT", exception.getMessage(), null));
   }
 
+  @ExceptionHandler({
+    org.springframework.http.converter.HttpMessageNotReadableException.class,
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+    org.springframework.web.method.annotation.HandlerMethodValidationException.class
+  })
+  public ResponseEntity<ApiResponse<Void>> handleInvalidRequest(Exception exception) {
+    return ResponseEntity.badRequest()
+        .body(ApiResponse.of("INVALID_INPUT", "올바르지 않은 요청입니다.", null));
+  }
+
   // 예상치 못한 예외 처리 (500)
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Void>> handleException(Exception exception) {

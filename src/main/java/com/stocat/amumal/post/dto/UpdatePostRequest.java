@@ -1,10 +1,21 @@
 package com.stocat.amumal.post.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.stocat.amumal.post.domain.ReviewTag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.util.Set;
 
-/** 게시글 수정 요청. 종목(symbol)은 생성 이후 변경할 수 없다. */
 public record UpdatePostRequest(
-    @NotBlank String title,
+    @NotNull @Min(1) @Max(5) Integer rating,
+    Set<@NotNull ReviewTag> tags,
+    @NotBlank @Size(max = 26) String title,
     @NotBlank String content,
-    @JsonProperty("attachFileUrl") String image) {}
+    @JsonProperty("attachFileUrl") String image) {
+  public UpdatePostRequest {
+    if (tags == null) tags = Set.of();
+  }
+}

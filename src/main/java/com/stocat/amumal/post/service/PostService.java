@@ -11,10 +11,10 @@ public interface PostService {
 
   List<PostSummaryResponse> getPostsByOffset(int offset, int limit);
 
-  PostCursorSliceResponse getPostsByCursor(String symbol, Long cursor, int limit);
+  PostCursorSliceResponse getPostsByCursor(Long menuId, Long cursor, int limit);
 
   PostSearchSliceResponse searchPosts(
-      String symbol, String keyword, int offset, int limit, PostSearchSort sort);
+      Long menuId, String keyword, int offset, int limit, PostSearchSort sort);
 
   GetPostResponse getPost(Long postId, Long userId);
 

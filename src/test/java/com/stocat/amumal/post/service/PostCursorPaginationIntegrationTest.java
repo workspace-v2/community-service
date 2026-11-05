@@ -2,21 +2,24 @@ package com.stocat.amumal.post.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.stocat.amumal.menu.domain.Brand;
+import com.stocat.amumal.menu.domain.Menu;
+import com.stocat.amumal.menu.repository.BrandRepository;
+import com.stocat.amumal.menu.repository.MenuRepository;
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.dto.PostCursorSliceResponse;
 import com.stocat.amumal.post.dto.PostSearchSliceResponse;
 import com.stocat.amumal.post.dto.PostSummaryResponse;
 import com.stocat.amumal.post.repository.PostRepository;
-import com.stocat.amumal.stock.domain.StockSnapshot;
-import com.stocat.amumal.stock.domain.StockStatus;
-import com.stocat.amumal.stock.repository.StockSnapshotRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +35,9 @@ class PostCursorPaginationIntegrationTest {
   @Autowired private PostService postService;
   @Autowired private UserRepository userRepository;
   @Autowired private PostRepository postRepository;
-  @Autowired private StockSnapshotRepository stockSnapshotRepository;
+  @Autowired private MenuRepository menuRepository;
+  @Autowired private BrandRepository brandRepository;
+  private final Map<String, Menu> fixtures = new HashMap<>();
   @Autowired private EntityManager entityManager;
 
   @Test
@@ -41,12 +46,14 @@ class PostCursorPaginationIntegrationTest {
     User user =
         userRepository.save(
             User.of("cursor-writer@stocat.com", "Password1!", "cursor", "https://example.com"));
-    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
+    fixtures.put("cheese", menuRepository.save(activeMenu("합성 치즈버거")));
 
     List<Long> expectedIds = new ArrayList<>();
     for (int i = 1; i <= 25; i++) {
       Post savedPost =
-          postRepository.save(Post.of(user, "005930", "title-" + i, "content-" + i, null));
+          postRepository.save(
+              Post.of(
+                  user, fixtures.get("cheese"), 4, Set.of(), "title-" + i, "content-" + i, null));
       expectedIds.add(savedPost.getId());
     }
 
@@ -93,35 +100,43 @@ class PostCursorPaginationIntegrationTest {
   }
 
   @Test
-  @DisplayName("커서 페이지네이션은 symbol 필터가 있으면 해당 종목 게시글만 조회한다")
-  void getPostsByCursorFiltersBySymbol() {
+  @DisplayName("커서 페이지네이션은 메뉴 필터가 있으면 해당 메뉴 리뷰만 조회한다")
+  void getPostsByCursorFiltersByMenu() {
     User user =
         userRepository.save(
             User.of(
-                "symbol-cursor-writer@stocat.com",
+                "menu-cursor-writer@stocat.com",
                 "Password1!",
-                "symbolcur",
+                "menucursor",
                 "https://example.com"));
-    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
-    stockSnapshotRepository.save(activeStock("000660", "SK하이닉스"));
+    fixtures.put("cheese", menuRepository.save(activeMenu("합성 치즈버거")));
+    fixtures.put("chicken", menuRepository.save(activeMenu("합성 치킨버거")));
 
-    Post samsung1 = postRepository.save(Post.of(user, "005930", "s-title-1", "content", null));
-    postRepository.save(Post.of(user, "000660", "h-title-1", "content", null));
-    Post samsung2 = postRepository.save(Post.of(user, "005930", "s-title-2", "content", null));
+    Post samsung1 =
+        postRepository.save(
+            Post.of(user, fixtures.get("cheese"), 4, Set.of(), "s-title-1", "content", null));
+    postRepository.save(
+        Post.of(user, fixtures.get("chicken"), 4, Set.of(), "h-title-1", "content", null));
+    Post samsung2 =
+        postRepository.save(
+            Post.of(user, fixtures.get("cheese"), 4, Set.of(), "s-title-2", "content", null));
 
     entityManager.flush();
     entityManager.clear();
 
-    PostCursorSliceResponse response = postService.getPostsByCursor("005930", null, 10);
+    PostCursorSliceResponse response =
+        postService.getPostsByCursor(fixtures.get("cheese").getId(), null, 10);
 
     assertThat(extractIds(response.content())).containsExactly(samsung2.getId(), samsung1.getId());
-    assertThat(response.content()).extracting(PostSummaryResponse::symbol).containsOnly("005930");
+    assertThat(response.content())
+        .extracting(PostSummaryResponse::menuId)
+        .containsOnly(fixtures.get("cheese").getId());
   }
 
   @Test
-  @DisplayName("커서 페이지네이션은 없는 종목 코드면 빈 결과를 반환한다")
-  void getPostsByCursorReturnsEmptyWhenSymbolDoesNotExist() {
-    PostCursorSliceResponse response = postService.getPostsByCursor("999999", null, 10);
+  @DisplayName("커서 페이지네이션은 없는 메뉴 ID면 빈 결과를 반환한다")
+  void getPostsByCursorReturnsEmptyWhenMenuDoesNotExist() {
+    PostCursorSliceResponse response = postService.getPostsByCursor(999999L, null, 10);
 
     assertThat(response.content()).isEmpty();
     assertThat(response.nextCursor()).isNull();
@@ -134,11 +149,18 @@ class PostCursorPaginationIntegrationTest {
     User user =
         userRepository.save(
             User.of("search-slice@stocat.com", "Password1!", "srchslice", "https://example.com"));
-    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
+    fixtures.put("cheese", menuRepository.save(activeMenu("합성 치즈버거")));
 
     for (int i = 1; i <= 11; i++) {
       postRepository.save(
-          Post.of(user, "005930", "keyword title " + i, "keyword content " + i, null));
+          Post.of(
+              user,
+              fixtures.get("cheese"),
+              4,
+              Set.of(),
+              "keyword title " + i,
+              "keyword content " + i,
+              null));
     }
 
     entityManager.flush();
@@ -146,7 +168,11 @@ class PostCursorPaginationIntegrationTest {
 
     PostSearchSliceResponse response =
         postService.searchPosts(
-            "005930", "keyword", 0, 10, com.stocat.amumal.post.dto.PostSearchSort.RECENT);
+            fixtures.get("cheese").getId(),
+            "keyword",
+            0,
+            10,
+            com.stocat.amumal.post.dto.PostSearchSort.RECENT);
 
     assertThat(response.content()).hasSize(10);
     assertThat(response.offset()).isEqualTo(0);
@@ -165,8 +191,8 @@ class PostCursorPaginationIntegrationTest {
         .isSortedAccordingTo(Comparator.reverseOrder());
   }
 
-  private StockSnapshot activeStock(String symbol, String name) {
-    LocalDateTime now = LocalDateTime.now();
-    return StockSnapshot.of(symbol, name, "KOSPI", StockStatus.ACTIVE, null, null, now, now);
+  private Menu activeMenu(String name) {
+    Brand brand = brandRepository.save(Brand.of("합성 브랜드"));
+    return Menu.of(brand, name, "합성 메뉴 설명", 6000, Menu.SourceType.SYNTHETIC, null);
   }
 }

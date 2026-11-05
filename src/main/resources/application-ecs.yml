@@ -19,7 +19,5 @@ management:
         http.server.requests: true
 
 app:
-  stock-sync:
-    enabled: false
   seed:
     test-user-count: 0

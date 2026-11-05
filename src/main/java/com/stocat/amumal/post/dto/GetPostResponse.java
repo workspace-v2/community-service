@@ -1,12 +1,16 @@
 package com.stocat.amumal.post.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.stocat.amumal.post.domain.ReviewTag;
+import java.util.Set;
 
 public record GetPostResponse(
     Long id,
-    String symbol,
-    String stockName,
-    String market,
+    Long menuId,
+    String menuName,
+    String brandName,
+    Integer rating,
+    Set<ReviewTag> tags,
     Long userId,
     Long writerId,
     String title,

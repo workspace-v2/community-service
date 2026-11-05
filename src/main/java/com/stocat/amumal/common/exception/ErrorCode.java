@@ -47,16 +47,15 @@ public enum ErrorCode {
   POST_LIKE_NOT_FOUND("POST_ALREADY_UNLIKED", HttpStatus.CONFLICT, "좋아요하지 않은 게시글입니다."),
 
   // Post - validation
-  INVALID_PAGE_SIZE("INVALID_INPUT", HttpStatus.BAD_REQUEST, "size는 1 이상이어야 합니다."),
+  INVALID_PAGE_SIZE("INVALID_INPUT", HttpStatus.BAD_REQUEST, "size는 1~100이어야 합니다."),
   INVALID_POST_SEARCH_SORT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "지원하지 않는 정렬 방식입니다."),
   MISSING_POST_FIELDS("INVALID_INPUT", HttpStatus.BAD_REQUEST, "제목, 내용을 모두 작성해주세요."),
   EMPTY_POST_TITLE("INVALID_INPUT", HttpStatus.BAD_REQUEST, "제목을 입력해주세요."),
   POST_TITLE_TOO_LONG("INVALID_INPUT", HttpStatus.BAD_REQUEST, "제목은 최대 26자까지 작성 가능합니다."),
   EMPTY_POST_CONTENT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "내용을 입력해주세요."),
-  EMPTY_POST_SYMBOL("INVALID_INPUT", HttpStatus.BAD_REQUEST, "종목 코드를 입력해주세요."),
-  INVALID_POST_SYMBOL_FORMAT("INVALID_INPUT", HttpStatus.BAD_REQUEST, "종목 코드는 6자리 숫자여야 합니다."),
-  INVALID_POST_SYMBOL("INVALID_INPUT", HttpStatus.BAD_REQUEST, "유효하지 않은 종목 코드입니다."),
-  STOCK_NOT_FOUND("STOCK_NOT_FOUND", HttpStatus.NOT_FOUND, "종목을 찾을 수 없습니다."),
+  MENU_NOT_FOUND("MENU_NOT_FOUND", HttpStatus.NOT_FOUND, "메뉴를 찾을 수 없습니다."),
+  INVALID_REVIEW_RATING("INVALID_INPUT", HttpStatus.BAD_REQUEST, "평점은 1~5여야 합니다."),
+  INVALID_SEARCH("INVALID_INPUT", HttpStatus.BAD_REQUEST, "검색어는 1~100자, offset은 0~10000이어야 합니다."),
   TOO_MANY_IMAGES("INVALID_INPUT", HttpStatus.BAD_REQUEST, "이미지 파일은 1개만 업로드할 수 있습니다."),
 
   // Comment

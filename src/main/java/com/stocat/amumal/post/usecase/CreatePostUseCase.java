@@ -2,17 +2,17 @@ package com.stocat.amumal.post.usecase;
 
 import com.stocat.amumal.common.exception.ApiException;
 import com.stocat.amumal.common.exception.ErrorCode;
+import com.stocat.amumal.menu.domain.Menu;
+import com.stocat.amumal.menu.repository.MenuRepository;
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.dto.CreatePostRequest;
 import com.stocat.amumal.post.dto.CreatePostResponse;
-import com.stocat.amumal.post.dto.PostStockResponse;
 import com.stocat.amumal.post.repository.PostRepository;
 import com.stocat.amumal.post.service.PostImageMappingService;
-import com.stocat.amumal.post.service.PostStockSnapshotService;
 import com.stocat.amumal.post.validator.PostValidator;
-import com.stocat.amumal.stock.domain.StockSnapshot;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,7 @@ public class CreatePostUseCase {
   private final UserRepository userRepository;
   private final PostValidator postValidator;
   private final PostImageMappingService postImageMappingService;
-  private final PostStockSnapshotService postStockSnapshotService;
+  private final MenuRepository menuRepository;
 
   @Transactional
   public CreatePostResponse execute(Long userId, CreatePostRequest request) {
@@ -35,27 +35,34 @@ public class CreatePostUseCase {
         userRepository
             .findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-    StockSnapshot stockSnapshot =
-        postStockSnapshotService.getStockSnapshot(request.symbol().trim());
+    Menu menu =
+        menuRepository
+            .findById(request.menuId())
+            .orElseThrow(() -> new ApiException(ErrorCode.MENU_NOT_FOUND));
 
+    if (menu.isDeleted() || menu.getBrand().isDeleted())
+      throw new ApiException(ErrorCode.MENU_NOT_FOUND);
     Post savedPost =
         postRepository.save(
             Post.of(
                 user,
-                stockSnapshot.getSymbol(),
+                menu,
+                request.rating(),
+                request.tags(),
                 request.title().trim(),
                 request.content().trim(),
                 request.image() == null ? null : request.image().trim()));
 
     postImageMappingService.replace(savedPost, request.image());
-    PostStockResponse stock = postStockSnapshotService.toPostStockResponse(stockSnapshot);
 
     return new CreatePostResponse(
         savedPost.getId(),
         savedPost.getUser().getId(),
-        stock.symbol(),
-        stock.stockName(),
-        stock.market(),
+        menu.getId(),
+        menu.getName(),
+        menu.getBrand().getName(),
+        savedPost.getRating(),
+        Set.copyOf(savedPost.getTags()),
         savedPost.getTitle(),
         savedPost.getContent(),
         savedPost.getImageUrl());

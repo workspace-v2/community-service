@@ -2,14 +2,17 @@ package com.stocat.amumal.post.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.stocat.amumal.menu.domain.Brand;
+import com.stocat.amumal.menu.domain.Menu;
+import com.stocat.amumal.menu.repository.BrandRepository;
+import com.stocat.amumal.menu.repository.MenuRepository;
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.repository.PostRepository;
-import com.stocat.amumal.stock.domain.StockSnapshot;
-import com.stocat.amumal.stock.domain.StockStatus;
-import com.stocat.amumal.stock.repository.StockSnapshotRepository;
 import com.stocat.amumal.user.domain.User;
 import com.stocat.amumal.user.repository.UserRepository;
-import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,7 +29,9 @@ class PostViewFlushServiceTest {
   @Autowired private TestPostViewService testPostViewService;
   @Autowired private PostRepository postRepository;
   @Autowired private UserRepository userRepository;
-  @Autowired private StockSnapshotRepository stockSnapshotRepository;
+  @Autowired private MenuRepository menuRepository;
+  @Autowired private BrandRepository brandRepository;
+  private final Map<String, Menu> fixtures = new HashMap<>();
 
   @BeforeEach
   void setUp() {
@@ -73,13 +78,14 @@ class PostViewFlushServiceTest {
   }
 
   private Post savePost(String email, String nickname) {
-    stockSnapshotRepository.save(activeStock("005930", "삼성전자"));
+    fixtures.put("cheese", menuRepository.save(activeMenu("합성 치즈버거")));
     User user = userRepository.save(User.of(email, "Password1!", nickname, "https://example.com"));
-    return postRepository.save(Post.of(user, "005930", "title", "content", null));
+    return postRepository.save(
+        Post.of(user, fixtures.get("cheese"), 4, Set.of(), "title", "content", null));
   }
 
-  private StockSnapshot activeStock(String symbol, String name) {
-    LocalDateTime now = LocalDateTime.now();
-    return StockSnapshot.of(symbol, name, "KOSPI", StockStatus.ACTIVE, null, null, now, now);
+  private Menu activeMenu(String name) {
+    Brand brand = brandRepository.save(Brand.of("합성 브랜드"));
+    return Menu.of(brand, name, "합성 메뉴 설명", 6000, Menu.SourceType.SYNTHETIC, null);
   }
 }
