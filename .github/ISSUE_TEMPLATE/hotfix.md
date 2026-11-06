@@ -1,8 +1,8 @@
 ---
-name: '긴급 수정'
+name: 긴급 수정
 about: 운영 중 긴급하게 수정이 필요한 이슈
 title: "[HotFix]"
-labels: 'hotfix'
+labels: ''
 assignees: ''
 
 ---

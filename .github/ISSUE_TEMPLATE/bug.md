@@ -1,8 +1,8 @@
 ---
-name: '버그 수정'
+name: 버그 수정
 about: 버그 리포트 및 수정 이슈
 title: "[Fix]"
-labels: 'bug'
+labels: bug
 assignees: ''
 
 ---
