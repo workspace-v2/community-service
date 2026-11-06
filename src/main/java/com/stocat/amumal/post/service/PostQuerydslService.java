@@ -4,8 +4,10 @@ import static com.stocat.amumal.post.domain.QPost.post;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.stocat.amumal.menu.domain.QMenu;
 import com.stocat.amumal.post.domain.Post;
 import com.stocat.amumal.post.domain.ReviewTag;
 import com.stocat.amumal.post.dto.PostSearchSort;
@@ -46,13 +48,33 @@ public class PostQuerydslService {
 
   public List<Post> searchPosts(
       Long menuId, String keyword, long offset, long limit, PostSearchSort sort) {
+    List<ReviewTag> tags = ReviewTag.matching(keyword);
+    BooleanExpression catalogMatches;
+    if (sort == PostSearchSort.RELEVANCE && menuId == null && tags.isEmpty()) {
+      // 태그/메뉴 필터/최신순은 기존 실행 계획을 유지해 측정에서 확인한 회귀를 피한다.
+      QMenu matchingMenu = new QMenu("matchingMenu");
+      catalogMatches =
+          post.menu.id.in(
+              JPAExpressions.select(matchingMenu.id)
+                  .from(matchingMenu)
+                  .join(matchingMenu.brand)
+                  .where(
+                      matchingMenu
+                          .name
+                          .containsIgnoreCase(keyword)
+                          .or(matchingMenu.brand.name.containsIgnoreCase(keyword))));
+    } else {
+      catalogMatches =
+          post.menu
+              .name
+              .containsIgnoreCase(keyword)
+              .or(post.menu.brand.name.containsIgnoreCase(keyword));
+    }
     BooleanExpression matches =
         post.title
             .containsIgnoreCase(keyword)
             .or(post.content.containsIgnoreCase(keyword))
-            .or(post.menu.name.containsIgnoreCase(keyword))
-            .or(post.menu.brand.name.containsIgnoreCase(keyword));
-    List<ReviewTag> tags = ReviewTag.matching(keyword);
+            .or(catalogMatches);
     if (!tags.isEmpty()) matches = matches.or(post.tags.any().in(tags));
     JPAQuery<Post> q = base(menuId).where(matches).offset(offset).limit(limit);
     if (sort == PostSearchSort.RELEVANCE)
