@@ -26,7 +26,9 @@ public class PostQuerydslService {
         .join(post.user)
         .fetchJoin()
         .join(post.menu)
+        .fetchJoin()
         .join(post.menu.brand)
+        .fetchJoin()
         .where(post.deletedAt.isNull(), menuId == null ? null : post.menu.id.eq(menuId));
   }
 
