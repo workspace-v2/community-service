@@ -84,6 +84,7 @@ public class MenuService {
         queryFactory
             .selectFrom(menu)
             .join(menu.brand)
+            .fetchJoin()
             .where(
                 menu.deletedAt.isNull(),
                 menu.brand.deletedAt.isNull(),
