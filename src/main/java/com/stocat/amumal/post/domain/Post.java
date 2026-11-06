@@ -21,6 +21,7 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "post")
@@ -47,6 +48,8 @@ public class Post extends BaseEntity {
 
   private Integer rating;
 
+  // 최대 페이지 100건과 hasNext 확인용 1건을 한 번에 읽는다.
+  @BatchSize(size = 128)
   @ElementCollection
   @CollectionTable(name = "post_tag", joinColumns = @JoinColumn(name = "post_id"))
   @Enumerated(EnumType.STRING)
