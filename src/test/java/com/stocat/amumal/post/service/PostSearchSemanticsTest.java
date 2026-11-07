@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 검색 쿼리 변경 전후의 결과 ID·정렬·필터·페이지 경계와 중복 방지를 검증한다. */
 @SpringBootTest(properties = "spring.profiles.include=")
 @ActiveProfiles("test")
 @Transactional
@@ -73,6 +74,16 @@ class PostSearchSemanticsTest {
         .setParameter("id", legacy.getId())
         .executeUpdate();
     em.clear();
+    // 카탈로그와 매칭 태그가 없는 첫 페이지에서 제목/본문 단계의 경계를 검증한다.
+    add(classic, "소스 both A", "소스 body", Set.of(), true);
+    add(classic, "소스 title", "plain", Set.of(), true);
+    add(classic, "소스 both B", "소스 body", Set.of(), true);
+    add(classic, "body only A", "소스 body", Set.of(), true);
+    add(classic, "body only B", "소스 body", Set.of(), true);
+    add(classic, "Sauce title", "SAUCE body", Set.of(), true);
+    add(classic, "other title", "sauce body", Set.of(), true);
+    em.flush();
+    em.clear();
   }
 
   @ParameterizedTest
@@ -85,7 +96,13 @@ class PostSearchSemanticsTest {
     "매콤,RELEVANCE,0,3,false", "매콤,RECENT,0,3,false",
     "missing,RELEVANCE,0,3,false", "missing,RECENT,0,3,false",
     "%,RELEVANCE,0,3,false", "_,RELEVANCE,0,3,false",
-    "!,RELEVANCE,0,3,false", "%,RECENT,0,3,false"
+    "!,RELEVANCE,0,3,false", "%,RECENT,0,3,false",
+    "소스,RELEVANCE,0,1,false", "소스,RELEVANCE,0,2,false",
+    "소스,RELEVANCE,0,3,false", "소스,RELEVANCE,0,4,false",
+    "소스,RELEVANCE,0,5,false", "소스,RELEVANCE,0,100,false",
+    "소스,RELEVANCE,1,3,false", "소스,RECENT,0,3,false",
+    "소스,RELEVANCE,0,3,true", "SAUCE,RELEVANCE,0,1,false",
+    "SAUCE,RELEVANCE,0,100,false"
   })
   void preservesMatchingRankingFiltersAndPageBoundaries(
       String keyword, PostSearchSort sort, int offset, int limit, boolean filtered) {
