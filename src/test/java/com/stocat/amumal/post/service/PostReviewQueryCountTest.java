@@ -28,6 +28,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 목록·검색 결과 수가 늘어도 SQL 조회 횟수가 정해진 범위에 머무는지 검증한다. */
 @SpringBootTest(
     properties = {
       "spring.profiles.include=",
@@ -87,7 +88,7 @@ class PostReviewQueryCountTest {
     "relevance,10",
     "relevance,100"
   })
-  void pageUsesTwoSelectsWithDistinctMenusBrandsAndAuthors(String path, int limit) {
+  void pageUsesBoundedSelectsWithDistinctMenusBrandsAndAuthors(String path, int limit) {
     List<PostSummaryResponse> rows;
     if (path.equals("offset")) {
       rows = service.getPostsByOffset(0, limit);
@@ -118,7 +119,7 @@ class PostReviewQueryCountTest {
       assertThat(row.tags())
           .isEqualTo(index % 2 == 0 ? Set.of(ReviewTag.SPICY, ReviewTag.JUICY) : Set.of());
     }
-    assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+    assertThat(statistics.getPrepareStatementCount()).isEqualTo(path.equals("relevance") ? 4 : 2);
   }
 
   @ParameterizedTest
@@ -134,6 +135,57 @@ class PostReviewQueryCountTest {
               assertThat(row.brandName()).isEqualTo("brand-" + index);
             });
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"body,1,5", "body,10,5", "body,100,5", "menu-,1,3", "menu-,10,3", "menu-,100,3"})
+  void firstPageSqlCountIsIndependentOfPageSize(String keyword, int limit, int statements) {
+    var slice = service.searchPosts(null, keyword, 0, limit, PostSearchSort.RELEVANCE);
+    assertThat(slice.hasNext()).isTrue();
+    assertThat(slice.content())
+        .extracting(PostSummaryResponse::id)
+        .containsExactlyElementsOf(ids.subList(0, limit));
+    for (var row : slice.content()) {
+      assertThat(row.author().nickname()).startsWith("writer");
+      assertThat(row.menuName()).startsWith("menu-");
+      assertThat(row.brandName()).startsWith("brand-");
+      int index = Integer.parseInt(row.title().substring("keyword ".length()));
+      assertThat(row.tags())
+          .isEqualTo(index % 2 == 0 ? Set.of(ReviewTag.SPICY, ReviewTag.JUICY) : Set.of());
+    }
+    assertThat(statistics.getPrepareStatementCount()).isEqualTo(statements);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"3", "10", "100"})
+  void mixedTitleAndBodyResultsUseFiveSelectsRegardlessOfPageSize(int limit) {
+    List<Long> titleIds = ids.subList(99, 101);
+    em.createQuery("update Post p set p.title = :title where p.id in :ids")
+        .setParameter("title", "body title")
+        .setParameter("ids", titleIds)
+        .executeUpdate();
+    em.flush();
+    em.clear();
+    statistics.clear();
+
+    var slice = service.searchPosts(null, "body", 0, limit, PostSearchSort.RELEVANCE);
+
+    List<Long> expectedIds = new ArrayList<>(titleIds);
+    expectedIds.addAll(ids.subList(0, 99));
+    assertThat(slice.content())
+        .extracting(PostSummaryResponse::id)
+        .containsExactlyElementsOf(expectedIds.subList(0, limit));
+    assertThat(slice.hasNext()).isTrue();
+    // 카탈로그 확인 1 + 텍스트 존재 확인 1 + 제목 목록 1 + 본문 단독 목록 1 + 태그 일괄 조회 1
+    assertThat(statistics.getPrepareStatementCount()).isEqualTo(5);
+  }
+
+  @Test
+  void emptyRelevanceFirstPageStopsAfterCatalogAndTextExistenceChecks() {
+    var slice = service.searchPosts(null, "no-match", 0, 10, PostSearchSort.RELEVANCE);
+    assertThat(slice.content()).isEmpty();
+    assertThat(slice.hasNext()).isFalse();
+    assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
   }
 
   @Test
