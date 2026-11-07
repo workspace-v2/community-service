@@ -156,6 +156,30 @@ class PostReviewQueryCountTest {
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(statements);
   }
 
+  @ParameterizedTest
+  @CsvSource({"3", "10", "100"})
+  void mixedTitleAndBodyResultsUseFiveSelectsRegardlessOfPageSize(int limit) {
+    List<Long> titleIds = ids.subList(99, 101);
+    em.createQuery("update Post p set p.title = :title where p.id in :ids")
+        .setParameter("title", "body title")
+        .setParameter("ids", titleIds)
+        .executeUpdate();
+    em.flush();
+    em.clear();
+    statistics.clear();
+
+    var slice = service.searchPosts(null, "body", 0, limit, PostSearchSort.RELEVANCE);
+
+    List<Long> expectedIds = new ArrayList<>(titleIds);
+    expectedIds.addAll(ids.subList(0, 99));
+    assertThat(slice.content())
+        .extracting(PostSummaryResponse::id)
+        .containsExactlyElementsOf(expectedIds.subList(0, limit));
+    assertThat(slice.hasNext()).isTrue();
+    // 카탈로그 확인 1 + 텍스트 존재 확인 1 + 제목 목록 1 + 본문 단독 목록 1 + 태그 일괄 조회 1
+    assertThat(statistics.getPrepareStatementCount()).isEqualTo(5);
+  }
+
   @Test
   void emptyRelevanceFirstPageStopsAfterCatalogAndTextExistenceChecks() {
     var slice = service.searchPosts(null, "no-match", 0, 10, PostSearchSort.RELEVANCE);
