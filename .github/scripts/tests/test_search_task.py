@@ -1,4 +1,6 @@
 import copy
+import os
+import subprocess
 import importlib.util
 from pathlib import Path
 import unittest
@@ -33,5 +35,36 @@ class SearchTaskTest(unittest.TestCase):
                                      ('http://host','wrong','/burger/search/reader_password')]:
             with self.assertRaises(ValueError):m.configure(self.task(),'elasticsearch',url,prefix,password)
         with self.assertRaises(ValueError):m.configure(self.task(),'typo')
+
+class SearchPreflightTest(unittest.TestCase):
+    def validate(self, engine, url=''):
+        env = dict(os.environ, SEARCH_ENGINE=engine, ELASTICSEARCH_URL=url,
+                   ELASTICSEARCH_INDEX_PREFIX='burger-dev', ELASTICSEARCH_PASSWORD_PARAMETER='/burger/search/reader_password')
+        return subprocess.run(['python3', str(Path(__file__).resolve().parents[1]/'render-search-task.py'), '--validate-only'],
+                              input='not-an-ecs-task', capture_output=True, text=True, env=env)
+
+    def test_elasticsearch_missing_url_fails_with_clear_error(self):
+        result = self.validate('elasticsearch')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Invalid search deployment configuration', result.stderr)
+        self.assertIn('Elasticsearch URL', result.stderr)
+        self.assertNotIn('Traceback', result.stderr)
+
+    def test_mysql_does_not_require_url_or_task_input(self):
+        self.assertEqual(self.validate('mysql').returncode, 0)
+
+    def test_valid_elasticsearch_settings_pass_without_task_input(self):
+        self.assertEqual(self.validate('elasticsearch', 'http://es.internal:9200').returncode, 0)
+
+    def test_credentials_in_url_are_not_echoed_on_failure(self):
+        result = self.validate('elasticsearch', 'http://reader:private-password@es.internal:9200')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('private-password', result.stderr)
+
+    def test_workflow_validates_before_building_image(self):
+        workflow = (Path(__file__).resolve().parents[2]/'workflows/burger-ci-cd.yml').read_text()
+        deployment = workflow.split('  deploy:', 1)[1]
+        self.assertLess(deployment.index('render-search-task.py --validate-only'), deployment.index('docker/build-push-action@'))
+        self.assertIn('      SEARCH_ENGINE:', deployment.split('    steps:',1)[0])
 
 if __name__=='__main__':unittest.main()

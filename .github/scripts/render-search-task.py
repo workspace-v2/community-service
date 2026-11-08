@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Apply explicit search settings while preserving every other ECS task setting."""
+import argparse
 import json
 import os
 import re
@@ -7,7 +8,7 @@ import sys
 from urllib.parse import urlsplit
 
 
-def configure(task, engine, url='', prefix='', password_parameter=''):
+def validate_settings(engine, url='', prefix='', password_parameter=''):
     if engine not in ('mysql', 'elasticsearch'):
         raise ValueError('SEARCH_ENGINE must be mysql or elasticsearch')
     if engine == 'elasticsearch':
@@ -18,6 +19,10 @@ def configure(task, engine, url='', prefix='', password_parameter=''):
             raise ValueError('A valid environment-specific index prefix is required')
         if not password_parameter or not password_parameter.startswith(('arn:aws:ssm:', '/burger/search/')):
             raise ValueError('An SSM reader password reference is required')
+
+
+def configure(task, engine, url='', prefix='', password_parameter=''):
+    validate_settings(engine, url, prefix, password_parameter)
     apps = [container for container in task['containerDefinitions'] if container['name'] == 'app']
     if len(apps) != 1:
         raise ValueError('Expected exactly one app container')
@@ -34,10 +39,20 @@ def configure(task, engine, url='', prefix='', password_parameter=''):
 
 
 def main():
-    task = json.load(sys.stdin)
-    result = configure(task, os.environ.get('SEARCH_ENGINE', 'mysql'), os.environ.get('ELASTICSEARCH_URL', ''),
-                       os.environ.get('ELASTICSEARCH_INDEX_PREFIX', ''), os.environ.get('ELASTICSEARCH_PASSWORD_PARAMETER', ''))
-    json.dump(result, sys.stdout)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--validate-only', action='store_true', help='validate deployment settings without reading an ECS task')
+    args = parser.parse_args()
+    settings = (os.environ.get('SEARCH_ENGINE', 'mysql'), os.environ.get('ELASTICSEARCH_URL', ''),
+                os.environ.get('ELASTICSEARCH_INDEX_PREFIX', ''), os.environ.get('ELASTICSEARCH_PASSWORD_PARAMETER', ''))
+    try:
+        validate_settings(*settings)
+    except ValueError as error:
+        parser.exit(1, 'Invalid search deployment configuration: ' + str(error) + '\n')
+    if args.validate_only:
+        print('Search deployment configuration valid')
+        return
+    json.dump(configure(json.load(sys.stdin), *settings), sys.stdout)
+
 
 if __name__ == '__main__':
     main()
