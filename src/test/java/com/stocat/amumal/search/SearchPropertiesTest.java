@@ -58,4 +58,47 @@ class SearchPropertiesTest {
     assertThatThrownBy(() -> properties(Duration.ofNanos(1), Duration.ofSeconds(5)))
         .isInstanceOf(IllegalArgumentException.class);
   }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "es.internal",
+        "//es.internal:9200",
+        "ftp://es.internal:9200",
+        "http:/missing-host"
+      })
+  void invalidUrlReportsConfigurationErrorInsteadOfNullPointerException(String url) {
+    assertThatThrownBy(
+            () ->
+                new SearchProperties(
+                    SearchProperties.Engine.ELASTICSEARCH,
+                    URI.create(url),
+                    "reader",
+                    "test-secret",
+                    "burger-test",
+                    null,
+                    null,
+                    null))
+        .isExactlyInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Elasticsearch URL과 읽기 전용 인증 정보가 필요합니다.");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"http://es.internal:9200", "https://es.internal:9200", "HTTP://es.internal:9200"})
+  void acceptsHttpAndHttpsSchemes(String url) {
+    assertThatCode(
+            () ->
+                new SearchProperties(
+                    SearchProperties.Engine.ELASTICSEARCH,
+                    URI.create(url),
+                    "reader",
+                    "test-secret",
+                    "burger-test",
+                    null,
+                    null,
+                    null))
+        .doesNotThrowAnyException();
+  }
 }

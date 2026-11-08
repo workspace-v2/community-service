@@ -36,7 +36,8 @@ public record SearchProperties(
       throw new IllegalArgumentException("ES 검색 제한 시간은 1ms 이상이고 응답 대기 시간보다 짧아야 합니다.");
     if (engine == Engine.ELASTICSEARCH
         && (url == null
-            || !java.util.Set.of("http", "https").contains(url.getScheme())
+            || !("http".equalsIgnoreCase(url.getScheme())
+                || "https".equalsIgnoreCase(url.getScheme()))
             || url.getHost() == null
             || url.getUserInfo() != null
             || username == null
