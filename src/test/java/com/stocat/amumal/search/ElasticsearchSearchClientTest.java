@@ -9,17 +9,22 @@ import com.stocat.amumal.common.exception.ErrorCode;
 import com.stocat.amumal.post.dto.PostSearchSort;
 import com.stocat.amumal.search.config.SearchProperties;
 import com.stocat.amumal.search.service.ElasticsearchSearchClient;
+import java.io.IOException;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 /** HTTP 요청, 응답 역직렬화, lookahead 및 실패 응답을 검증한다. */
+@ExtendWith(OutputCaptureExtension.class)
 class ElasticsearchSearchClientTest {
   private MockRestServiceServer server;
   private ElasticsearchSearchClient client;
@@ -135,22 +140,52 @@ class ElasticsearchSearchClientTest {
         "broken",
         "{\"timed_out\":false,\"_shards\":{\"failed\":0},\"hits\":{\"hits\":[{\"_source\":{}}]}}"
       })
-  void partialTimeoutOrMalformedResponsesFailClosed(String body) {
+  void partialTimeoutOrMalformedResponsesFailClosed(String body, CapturedOutput output) {
     server.expect(anything()).andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
     assertThatThrownBy(() -> client.reviews(null, "갈릭", 0, 10, PostSearchSort.RELEVANCE))
         .isInstanceOfSatisfying(
             ApiException.class,
             e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.SEARCH_UNAVAILABLE));
+    String reason =
+        body.contains("\"timed_out\":true")
+            ? "search_timeout"
+            : body.contains("\"failed\":1")
+                ? "shard_failure"
+                : body.equals("broken") ? "client_error" : "invalid_response";
+    assertThat(output.getAll()).contains("kind=reviews", "reason=" + reason).doesNotContain("갈릭");
     server.verify();
   }
 
   @Test
-  void missingIndexReturns503() {
-    server.expect(anything()).andRespond(withStatus(HttpStatus.NOT_FOUND));
+  void missingIndexReturns503(CapturedOutput output) {
+    server
+        .expect(anything())
+        .andRespond(withStatus(HttpStatus.NOT_FOUND).body("private-response-content"));
     assertThatThrownBy(() -> client.menus("갈릭", null, null, 0, 10, true))
         .isInstanceOfSatisfying(
             ApiException.class,
             e -> assertThat(e.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+    assertThat(output.getAll())
+        .contains("kind=menus", "reason=http_error", "status=404")
+        .doesNotContain("private-response-content", "갈릭", "Authorization", "Basic ");
+    server.verify();
+  }
+
+  @Test
+  void transportFailureLogsOnlyExceptionType(CapturedOutput output) {
+    server
+        .expect(anything())
+        .andRespond(
+            request -> {
+              throw new IOException("private-transport-details");
+            });
+    assertThatThrownBy(() -> client.menus("private-keyword", null, null, 0, 10, true))
+        .isInstanceOfSatisfying(
+            ApiException.class,
+            e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.SEARCH_UNAVAILABLE));
+    assertThat(output.getAll())
+        .contains("kind=menus", "reason=client_error", "cause=ResourceAccessException")
+        .doesNotContain("private-transport-details", "private-keyword", "Authorization", "Basic ");
     server.verify();
   }
 }

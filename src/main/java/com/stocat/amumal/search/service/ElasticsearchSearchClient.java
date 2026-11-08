@@ -14,13 +14,17 @@ import com.stocat.amumal.search.config.SearchProperties;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 /** 색인 스냅샷으로 메뉴·리뷰를 검색한다. 장애 시 MySQL로 우회하지 않고 503을 반환한다. */
 public class ElasticsearchSearchClient {
+  private static final Logger log = LoggerFactory.getLogger(ElasticsearchSearchClient.class);
   private final RestClient client;
   private final SearchProperties properties;
 
@@ -120,23 +124,41 @@ public class ElasticsearchSearchClient {
               .body(body)
               .retrieve()
               .body(type);
-      if (reply == null
-          || !Boolean.FALSE.equals(reply.timedOut())
-          || reply.shards() == null
-          || !Integer.valueOf(0).equals(reply.shards().failed())
-          || reply.hits() == null
-          || reply.hits().hits() == null) throw new ApiException(ErrorCode.SEARCH_UNAVAILABLE);
+      if (reply == null || reply.timedOut() == null) throw unavailable(kind, "invalid_response");
+      if (reply.timedOut()) throw unavailable(kind, "search_timeout");
+      if (reply.shards() == null || reply.shards().failed() == null)
+        throw unavailable(kind, "invalid_response");
+      if (reply.shards().failed() != 0) throw unavailable(kind, "shard_failure");
+      if (reply.hits() == null || reply.hits().hits() == null)
+        throw unavailable(kind, "invalid_response");
       List<T> rows = new ArrayList<>();
       for (Hit<T> hit : reply.hits().hits()) {
-        if (hit.source() == null || hit.source().response() == null)
-          throw new ApiException(ErrorCode.SEARCH_UNAVAILABLE);
+        if (hit == null || hit.source() == null || hit.source().response() == null)
+          throw unavailable(kind, "invalid_response");
         rows.add(hit.source().response());
       }
       return List.copyOf(rows);
     } catch (RestClientException exception) {
-      // 인증 헤더/서버 응답을 사용자에게 노출하지 않는다. 자동 fallback은 측정 결과를 오염시킨다.
+      // 메시지·본문·인증 헤더·검색어·stack trace는 기록하지 않는다.
+      if (exception instanceof RestClientResponseException responseException) {
+        log.warn(
+            "Elasticsearch 검색 실패 kind={} reason=http_error cause={} status={}",
+            kind,
+            exception.getClass().getSimpleName(),
+            responseException.getStatusCode().value());
+      } else {
+        log.warn(
+            "Elasticsearch 검색 실패 kind={} reason=client_error cause={}",
+            kind,
+            exception.getClass().getSimpleName());
+      }
       throw new ApiException(ErrorCode.SEARCH_UNAVAILABLE);
     }
+  }
+
+  private ApiException unavailable(String kind, String reason) {
+    log.warn("Elasticsearch 검색 실패 kind={} reason={}", kind, reason);
+    return new ApiException(ErrorCode.SEARCH_UNAVAILABLE);
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)
