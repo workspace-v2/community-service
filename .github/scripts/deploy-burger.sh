@@ -14,7 +14,8 @@ jq --arg image "$IMAGE" '
   .containerDefinitions |= map(if .name == "app" then .image = $image else . end)
   | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities,
         .registeredAt, .registeredBy, .deregisteredAt)
-' "$work/base.json" > "$work/task.json"
+' "$work/base.json" > "$work/image-task.json"
+python3 "$(dirname "$0")/render-search-task.py" < "$work/image-task.json" > "$work/task.json"
 arn=$(aws ecs register-task-definition --cli-input-json "file://$work/task.json" --query taskDefinition.taskDefinitionArn --output text)
 
 # Inline AppSpec avoids storing an application revision in a publicly readable bucket.
