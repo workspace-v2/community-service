@@ -3,7 +3,7 @@ package com.stocat.amumal.search.controller;
 import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.menu.service.MenuService;
 import com.stocat.amumal.post.dto.*;
-import com.stocat.amumal.post.service.PostService;
+import com.stocat.amumal.search.service.SearchService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Validated
 public class SearchController {
-  private final MenuService menus;
-  private final PostService posts;
+  private final SearchService searchService;
 
   public record Result(MenuService.Slice menus, PostSearchSliceResponse reviews) {}
 
@@ -35,7 +34,8 @@ public class SearchController {
     return ApiResponse.of(
         "메뉴와 버거 리뷰 검색에 성공했습니다.",
         new Result(
-            menus.list(keyword, null, null, menuOffset, limit, order == PostSearchSort.RELEVANCE),
-            posts.searchPosts(null, keyword, reviewOffset, limit, order)));
+            searchService.menus(
+                keyword, null, null, menuOffset, limit, order == PostSearchSort.RELEVANCE),
+            searchService.reviews(null, keyword, reviewOffset, limit, order)));
   }
 }

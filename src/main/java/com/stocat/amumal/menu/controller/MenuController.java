@@ -4,6 +4,7 @@ import com.stocat.amumal.common.response.ApiResponse;
 import com.stocat.amumal.menu.dto.MenuResponse;
 import com.stocat.amumal.menu.service.MenuService;
 import com.stocat.amumal.post.dto.PostSearchSort;
+import com.stocat.amumal.search.service.SearchService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class MenuController {
   private final MenuService menus;
+  private final SearchService searchService;
 
   @GetMapping("/brands")
   public ApiResponse<MenuService.BrandSlice> brands(
@@ -37,7 +39,7 @@ public class MenuController {
       @RequestParam(defaultValue = "recent") String sort) {
     return ApiResponse.of(
         "메뉴 목록 조회에 성공했습니다.",
-        menus.list(
+        searchService.menus(
             keyword,
             brandId,
             maxPrice,

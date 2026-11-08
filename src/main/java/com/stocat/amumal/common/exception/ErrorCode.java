@@ -58,6 +58,9 @@ public enum ErrorCode {
   INVALID_SEARCH("INVALID_INPUT", HttpStatus.BAD_REQUEST, "검색어는 1~100자, offset은 0~10000이어야 합니다."),
   TOO_MANY_IMAGES("INVALID_INPUT", HttpStatus.BAD_REQUEST, "이미지 파일은 1개만 업로드할 수 있습니다."),
 
+  SEARCH_UNAVAILABLE(
+      "SEARCH_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE, "검색 서비스를 일시적으로 사용할 수 없습니다."),
+
   // Comment
   COMMENT_NOT_FOUND("COMMENT_NOT_FOUND", HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
   COMMENT_UPDATE_FORBIDDEN("COMMENT_UPDATE_FORBIDDEN", HttpStatus.FORBIDDEN, "댓글 작성자만 수정할 수 있습니다."),

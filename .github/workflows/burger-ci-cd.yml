@@ -73,8 +73,15 @@ jobs:
       ECR_REPOSITORY: burger-${{ github.ref_name }}
       CODEDEPLOY_APPLICATION: burger
       CODEDEPLOY_GROUP: burger-${{ github.ref_name }}
+      # Both default to MySQL. Enable dev only after verified initial indexing.
+      SEARCH_ENGINE: ${{ github.ref_name == 'main' && (vars.BURGER_SEARCH_ENGINE_MAIN || 'mysql') || (vars.BURGER_SEARCH_ENGINE_DEV || 'mysql') }}
+      ELASTICSEARCH_URL: ${{ vars.BURGER_ELASTICSEARCH_URL }}
+      ELASTICSEARCH_INDEX_PREFIX: burger-${{ github.ref_name }}
+      ELASTICSEARCH_PASSWORD_PARAMETER: /burger/search/reader_password
     steps:
       - uses: actions/checkout@v4
+      - name: Validate search settings before image build
+        run: python3 .github/scripts/render-search-task.py --validate-only
       - uses: actions/download-artifact@v4
         with:
           name: burger-jar-${{ github.sha }}
