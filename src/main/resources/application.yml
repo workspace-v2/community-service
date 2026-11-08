@@ -41,6 +41,15 @@ spring:
     type: redis # Redis/Valkey를 캐시 저장소로 사용
 
 app:
+  search:
+    engine: ${SEARCH_ENGINE:mysql}
+    url: ${ELASTICSEARCH_URL:}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+    index-prefix: ${ELASTICSEARCH_INDEX_PREFIX:burger-dev}
+    connect-timeout: 2s
+    read-timeout: 5s
+    search-timeout: 3s
   upload:
     storage-type: local
     base-dir: ./uploads
