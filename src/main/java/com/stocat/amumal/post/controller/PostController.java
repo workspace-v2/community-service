@@ -18,6 +18,7 @@ import com.stocat.amumal.post.service.PostService;
 import com.stocat.amumal.post.usecase.CreatePostUseCase;
 import com.stocat.amumal.post.usecase.UpdatePostUseCase;
 import com.stocat.amumal.post.usecase.UploadPostImageUseCase;
+import com.stocat.amumal.search.service.SearchService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -54,6 +55,7 @@ public class PostController {
   private final PostLikeService postLikeService;
   private final CreatePostUseCase createPostUseCase;
   private final UpdatePostUseCase updatePostUseCase;
+  private final SearchService searchService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -97,7 +99,7 @@ public class PostController {
       @RequestParam(value = "sort", defaultValue = "recent") String sort) {
     PostSearchSort searchSort = PostSearchSort.from(sort);
     return ApiResponse.of(
-        "버거 리뷰 검색에 성공했습니다.", postService.searchPosts(menuId, keyword, offset, limit, searchSort));
+        "버거 리뷰 검색에 성공했습니다.", searchService.reviews(menuId, keyword, offset, limit, searchSort));
   }
 
   @GetMapping("/{post_id}")

@@ -51,7 +51,7 @@ class PostControllerValidationTest {
   }
 
   private PostController newController() {
-    return new PostController(null, stubPostService(), null, null, null);
+    return new PostController(null, stubPostService(), null, null, null, null);
   }
 
   private PostService stubPostService() {
