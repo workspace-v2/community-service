@@ -1,4 +1,4 @@
-name: Burgerpedia CI and Fargate Blue-Green
+name: Burgerpedia · 다중 서버 부하 테스트용 ECS 배포
 
 on:
   push:
