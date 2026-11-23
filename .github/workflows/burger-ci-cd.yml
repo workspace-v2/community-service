@@ -1,10 +1,10 @@
-name: Burgerpedia · 다중 서버 부하 테스트용 ECS 배포
+name: 다중 서버 부하 테스트용 ECS 배포 파이프라인
 
 on:
-  push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+  # push:
+  #   branches: [main, dev]
+  # pull_request:
+  #   branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -56,7 +56,7 @@ jobs:
   deploy:
     needs: verify
     if: >-
-      github.event_name != 'pull_request' &&
+      github.event_name == 'workflow_dispatch' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') &&
       vars.BURGER_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-24.04
