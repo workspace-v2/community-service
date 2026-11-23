@@ -17,41 +17,9 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: amumal
-          MYSQL_USER: amumal
-          MYSQL_PASSWORD: ci-password
-          MYSQL_ROOT_PASSWORD: ci-root-password
-        ports: ["3306:3306"]
-        options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1"
-          --health-interval 10s --health-timeout 5s --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deployment script regression tests
-        run: python3 -m unittest discover -s .github/scripts/tests -v
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Unit and H2 integration tests
-        run: ./gradlew --no-daemon test bootJar
-      - name: MySQL migration and integration tests
-        run: ./gradlew --no-daemon test --rerun-tasks
-        env:
-          SPRING_APPLICATION_JSON: >-
-            {"spring":{"datasource":{"url":"jdbc:mysql://127.0.0.1:3306/amumal?connectionTimeZone=Asia/Seoul","username":"amumal","password":"ci-password","driver-class-name":"com.mysql.cj.jdbc.Driver"}}}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: burger-jar-${{ github.sha }}
-          path: build/libs/*-SNAPSHOT.jar
-          if-no-files-found: error
-          retention-days: 7
+    uses: ./.github/workflows/verify-java.yml
+    with:
+      verify-deployment-scripts: true
 
   deploy:
     needs: verify
@@ -77,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: burger-jar-${{ github.sha }}
+          name: java-jar-${{ github.sha }}
           path: build/libs
       - name: AWS authentication through branch-scoped OIDC
         uses: aws-actions/configure-aws-credentials@v4
