@@ -1,0 +1,41 @@
+name: Blue-Green Lab GitOps
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_gitops:
+        description: Deploy the published image by updating the lab values in Git
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blue-green-lab-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/verify-java.yml
+
+  publish:
+    needs: verify
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-blue-green.yml
+    with:
+      image-repository: ghcr.io/workspace-v2/community-service-blue-green-lab
+      gitops-repository: workspace-v2/k8s-pilot
+      gitops-branch: main
+      helm-chart: lab/blue-green
+      helm-release: burger-lab
+      namespace: blue-green-lab
+      update-gitops: ${{ inputs.update_gitops }}
+    permissions:
+      contents: read
+      packages: write
+    secrets:
+      gitops-token: ${{ secrets.GITOPS_REPO_TOKEN }}

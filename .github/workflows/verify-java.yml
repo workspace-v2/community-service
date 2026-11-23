@@ -1,0 +1,51 @@
+name: Verify Java Application
+
+on:
+  workflow_call:
+    inputs:
+      verify-deployment-scripts:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: amumal
+          MYSQL_USER: amumal
+          MYSQL_PASSWORD: ci-password
+          MYSQL_ROOT_PASSWORD: ci-root-password
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deployment script regression tests
+        if: inputs.verify-deployment-scripts
+        run: python3 -m unittest discover -s .github/scripts/tests -v
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit and H2 integration tests
+        run: ./gradlew --no-daemon test bootJar
+      - name: MySQL migration and integration tests
+        run: ./gradlew --no-daemon test --rerun-tasks
+        env:
+          SPRING_APPLICATION_JSON: >-
+            {"spring":{"datasource":{"url":"jdbc:mysql://127.0.0.1:3306/amumal?connectionTimeZone=Asia/Seoul","username":"amumal","password":"ci-password","driver-class-name":"com.mysql.cj.jdbc.Driver"}}}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: java-jar-${{ github.sha }}
+          path: build/libs/*-SNAPSHOT.jar
+          if-no-files-found: error
+          retention-days: 7
