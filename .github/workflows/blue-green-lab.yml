@@ -31,37 +31,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: java-jar-${{ github.sha }}
-          path: build/libs
-      - name: Scan packaged Java dependencies
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
-        env:
-          TRIVY_LIST_ALL_PKGS: 'true'
-        with:
-          scan-type: rootfs
-          scan-ref: build/libs
-          scanners: vuln
-          vuln-type: library
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          format: json
-          output: trivy-java.json
-      - name: Enforce dependency scan results
-        shell: bash
-        run: |
-          packages=$(jq '[.Results[]? | select(.Type == "jar") | .Packages[]?] | length' trivy-java.json)
-          if (( packages == 0 )); then
-            echo '::error::Trivy did not identify any packaged Java dependencies.'
-            exit 1
-          fi
-          echo "Scanned $packages packaged Java dependencies."
-          jq -r '.Results[]?.Vulnerabilities[]? | [.VulnerabilityID, .PkgName, .InstalledVersion, .FixedVersion, .Severity] | @tsv' trivy-java.json
-          if ! jq -e 'all(.Results[]?; (.Vulnerabilities // []) | length == 0)' trivy-java.json >/dev/null; then
-            echo '::error::Fixable HIGH or CRITICAL Java vulnerabilities were found.'
-            exit 1
-          fi
+          persist-credentials: false
+      - uses: ./.github/actions/scan-java-jar
 
   publish:
     needs: verify

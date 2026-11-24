@@ -3,6 +3,9 @@ name: Publish and Deploy a Blue-Green Image
 on:
   workflow_call:
     inputs:
+      dockerfile:
+        type: string
+        default: Dockerfile.ecs
       image-repository:
         type: string
         required: true
@@ -52,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.ecs
+          file: ${{ inputs.dockerfile }}
           platforms: linux/amd64
           load: true
           tags: ${{ env.IMAGE_TAG }}
