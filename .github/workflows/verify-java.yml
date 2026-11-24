@@ -6,6 +6,9 @@ on:
       verify-deployment-scripts:
         type: boolean
         default: false
+      run-mysql-integration:
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -16,7 +19,7 @@ jobs:
     timeout-minutes: 25
     services:
       mysql:
-        image: mysql:8.0
+        image: ${{ inputs.run-mysql-integration && 'mysql:8.0' || '' }}
         env:
           MYSQL_DATABASE: amumal
           MYSQL_USER: amumal
@@ -39,6 +42,7 @@ jobs:
       - name: Unit and H2 integration tests
         run: ./gradlew --no-daemon test bootJar
       - name: MySQL migration and integration tests
+        if: inputs.run-mysql-integration
         run: ./gradlew --no-daemon test --rerun-tasks
         env:
           SPRING_APPLICATION_JSON: >-
