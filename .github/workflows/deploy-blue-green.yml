@@ -27,8 +27,13 @@ on:
       update-gitops:
         type: boolean
         default: false
+      gitops-app-client-id:
+        type: string
+        default: ''
     secrets:
       gitops-token:
+        required: false
+      gitops-app-private-key:
         required: false
 
 jobs:
@@ -92,16 +97,44 @@ jobs:
       - name: Require GitOps write access
         env:
           GITOPS_TOKEN: ${{ secrets.gitops-token }}
+          GITOPS_APP_CLIENT_ID: ${{ inputs.gitops-app-client-id }}
+          GITOPS_APP_PRIVATE_KEY: ${{ secrets.gitops-app-private-key }}
         run: |
-          if [ -z "$GITOPS_TOKEN" ]; then
-            echo "::error::GITOPS_REPO_TOKEN is required to update the GitOps repository."
+          if [[ -n "$GITOPS_APP_CLIENT_ID" ]]; then
+            if [[ -z "$GITOPS_APP_PRIVATE_KEY" ]]; then
+              echo "::error::A GitHub App private key is required with a GitOps App client ID."
+              exit 1
+            fi
+          elif [[ -z "$GITOPS_TOKEN" ]]; then
+            echo "::error::A GitHub App or GitOps repository token is required for updates."
             exit 1
           fi
+      - name: Resolve GitHub App token scope
+        if: inputs.gitops-app-client-id != ''
+        id: gitops-target
+        env:
+          GITOPS_REPOSITORY: ${{ inputs.gitops-repository }}
+        run: |
+          if [[ ! "$GITOPS_REPOSITORY" =~ ^([a-zA-Z0-9-]+)/([a-zA-Z0-9_.-]+)$ ]]; then
+            echo "::error::The GitOps repository must use the owner/repository format."
+            exit 1
+          fi
+          printf 'owner=%s\nrepository=%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+      - name: Create scoped GitOps installation token
+        if: inputs.gitops-app-client-id != ''
+        id: gitops-app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        with:
+          client-id: ${{ inputs.gitops-app-client-id }}
+          private-key: ${{ secrets.gitops-app-private-key }}
+          owner: ${{ steps.gitops-target.outputs.owner }}
+          repositories: ${{ steps.gitops-target.outputs.repository }}
+          permission-contents: write
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.gitops-repository }}
           ref: ${{ inputs.gitops-branch }}
-          token: ${{ secrets.gitops-token }}
+          token: ${{ steps.gitops-app-token.outputs.token || secrets.gitops-token }}
       - name: Update and validate lab values
         shell: bash
         env:
@@ -110,6 +143,8 @@ jobs:
           HELM_RELEASE: ${{ inputs.helm-release }}
           NAMESPACE: ${{ inputs.namespace }}
           GITOPS_BRANCH: ${{ inputs.gitops-branch }}
+          GITOPS_APP_SLUG: ${{ steps.gitops-app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.gitops-app-token.outputs.token }}
         run: |
           values="$HELM_CHART/values-gitops.yaml"
           yq -e 'has("image") and has("lab")' "$values" >/dev/null
@@ -121,7 +156,13 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          author='github-actions[bot]'
+          author_id=41898282
+          if [[ -n "$GITOPS_APP_SLUG" ]]; then
+            author="$GITOPS_APP_SLUG[bot]"
+            author_id=$(gh api "/users/$author" --jq .id)
+          fi
+          git config user.name "$author"
+          git config user.email "$author_id+$author@users.noreply.github.com"
           git commit -m "chore(deploy): update $HELM_RELEASE to ${GITHUB_SHA:0:12}"
           git push origin "HEAD:refs/heads/$GITOPS_BRANCH"
