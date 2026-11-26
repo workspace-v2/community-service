@@ -3,6 +3,16 @@ name: Blue-Green Lab GitOps
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradlew'
+      - 'gradle/**'
+      - 'Dockerfile*'
+      - '.dockerignore'
+      - 'Dockerfile*.dockerignore'
+      - '.github/**'
   workflow_dispatch:
     inputs:
       update_gitops:
