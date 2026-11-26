@@ -1,14 +1,7 @@
 name: Update GitOps Image Tag
 
 on:
-  workflow_run:
-    workflows: [ "Push Docker Image to GHCR" ]
-    types:
-      - completed
-
-    # main 브랜치에서 실행된 이미지 Push 워크플로만 배포 대상으로 처리
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
