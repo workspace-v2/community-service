@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   changes:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     permissions:
       pull-requests: read
@@ -28,7 +29,6 @@ jobs:
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
-        if: github.event_name == 'pull_request'
         with:
           filters: |
             app:
@@ -55,9 +55,12 @@ jobs:
   verify:
     needs: changes
     if: >-
-      (github.event_name == 'pull_request' && needs.changes.outputs.app == 'true') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+      !cancelled() &&
+      ((github.event_name == 'pull_request' && needs.changes.result == 'success' && needs.changes.outputs.app == 'true') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
     uses: ./.github/workflows/verify-java.yml
+    with:
+      publish-jar: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.dependencies == 'true' }}
 
   dependency-scan:
     name: Java dependency scan
