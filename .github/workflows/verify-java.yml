@@ -6,6 +6,12 @@ on:
       verify-deployment-scripts:
         type: boolean
         default: false
+      publish-jar:
+        type: boolean
+        default: true
+      run-unit-and-h2-tests:
+        type: boolean
+        default: true
       run-mysql-integration:
         type: boolean
         default: true
@@ -39,15 +45,20 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Unit and H2 integration tests
-        run: ./gradlew --no-daemon test bootJar
+      - name: Run requested Java tests and packaging
+        if: inputs.run-unit-and-h2-tests || inputs.publish-jar
+        run: >-
+          ./gradlew --no-daemon
+          ${{ inputs.run-unit-and-h2-tests && 'test' || '' }}
+          ${{ inputs.publish-jar && 'bootJar' || '' }}
       - name: MySQL migration and integration tests
         if: inputs.run-mysql-integration
-        run: ./gradlew --no-daemon test --rerun-tasks
+        run: ./gradlew --no-daemon test --rerun --tests '*MySqlMigrationIntegrationTest'
         env:
           SPRING_APPLICATION_JSON: >-
             {"spring":{"datasource":{"url":"jdbc:mysql://127.0.0.1:3306/amumal?connectionTimeZone=Asia/Seoul","username":"amumal","password":"ci-password","driver-class-name":"com.mysql.cj.jdbc.Driver"}}}
       - uses: actions/upload-artifact@v4
+        if: inputs.publish-jar
         with:
           name: java-jar-${{ github.sha }}
           path: build/libs/*-SNAPSHOT.jar
