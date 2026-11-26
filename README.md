@@ -1,90 +1,54 @@
-# Burgerpedia — 버거 리뷰와 검색 커뮤니티
+# 🍔 Burgerpedia
 
-기존 `Post`와 `/v1/posts` CRUD를 버거 리뷰 게시글로 전환했다. 별도의 Review 엔티티·CRUD는 없다. 메뉴 정보와 리뷰 게시글을 MySQL LIKE로 검색하는 기준 구현이며, Elasticsearch 도입 전 성능·품질 비교의 출발점이다.
+**취향에 맞는 햄버거를 찾고, 다른 사람들과 버거에 대한 경험을 나누는 검색·리뷰 커뮤니티입니다.**
 
-Java 21, Spring Boot, JPA/Querydsl, MySQL, Redis를 사용한다. Elasticsearch/Nori/BM25/Outbox는 아직 구현하지 않았다. Redis는 기존 로그인 토큰·조회수·캐시 용도다. `market-data-service`에 대한 호출과 종목 동기화는 이 서비스에서 제거했다.
+## Project Overview
 
-## 도메인과 데이터 보존
+버거피디아는 브랜드에 관계없이 메뉴를 탐색하고, 가격과 평점, 맛과 식감에 대한 사용자 평가를 참고할 수 있도록 기획한 서비스입니다. 사용자는 자신의 취향에 맞는 버거를 찾고, 직접 경험한 메뉴에 대한 리뷰를 공유할 수 있습니다.
 
-- `brand` → `menu` → `post`: 하나의 메뉴에 여러 버거 리뷰가 연결된다.
-- 새 리뷰에는 `menuId`, 정수 평점 `rating`(1~5), 제목·본문이 필요하다. 태그는 선택이며 생략하면 빈 집합이다.
-- 메뉴 연결은 작성 후 바꿀 수 없다. 수정에서는 평점·태그·제목·본문·이미지를 함께 전달한다. 태그 생략 시 기존 태그가 비워진다.
-- 기존 댓글·좋아요·이미지 매핑·조회수 처리를 재사용한다. 기존 댓글·좋아요·이미지 매핑 삭제 처리에는 변경을 추가하지 않는다. 새 태그는 Post의 요소 컬렉션으로 관리한다.
-- V1~V5는 이미 적용된 이력으로 보존하고 V6가 카탈로그와 리뷰 컬럼을 추가한다. 기존 종목 게시글에 임의의 메뉴나 평점을 부여하지 않는다. 기존 행·symbol·stock 테이블은 DB에 보존하지만 버거 목록·검색·상세·수정에는 노출하지 않는다. 과거 글의 수동 매핑/보관 정책은 별도 작업이다.
-- `menu.sourceType`은 `REAL` 또는 `SYNTHETIC`이다. `REAL`에는 출처 URL이 필수다. 가격은 원 단위 정수이며 미확인 가격은 NULL이다. 실제 브랜드·메뉴 수집과 대규모 리뷰 생성은 아직 수행하지 않았다.
+이 저장소는 버거피디아의 메뉴 검색과 리뷰 커뮤니티 기능을 제공하는 백엔드 서비스입니다. 서비스 개발과 함께 검색 성능, 배포 자동화, 서비스 안정성을 검증하는 개인 프로젝트로 진행하고 있습니다.
 
-## HTTP API
+## Features
 
-기본 경로는 `/v1`, 응답은 기존 `{code, message, data}` 형식이다. 카탈로그·리뷰 GET은 공개다. 리뷰 쓰기의 기존 인증 경로는 그대로 유지한다. 기존 JWT 필터가 `/posts` 쓰기도 제외하여 사용자 ID가 전달되지 않는 문제는 이번 기능 추가에서 수정하지 않는다.
+> **User Journey** : 메뉴 탐색 → 리뷰와 평점 확인 → 메뉴 선택 → 리뷰 작성 → 경험 공유
 
-| 메서드·경로 | 내용 |
-|---|---|
-| GET `/brands?offset=0&limit=20` | 브랜드 목록 |
-| GET `/menus?keyword=치즈&brandId=1&maxPrice=7000&sort=relevance` | 메뉴명·설명·브랜드명 LIKE 검색, 브랜드·가격 필터 |
-| GET `/menus/{menuId}` | 메뉴 상세·데이터 출처 |
-| POST `/posts` | 기존 게시글 작성 경로로 버거 리뷰 생성 |
-| PATCH `/posts/{postId}` | 기존 게시글 수정 경로로 리뷰 수정 |
-| DELETE `/posts/{postId}` | 기존 게시글 삭제 경로로 리뷰 삭제 |
-| GET `/posts/{postId}` | 메뉴·브랜드·평점·태그를 포함한 리뷰 상세 |
-| GET `/posts?offset=0&limit=10` | 리뷰 목록 |
-| GET `/posts/cursor?menuId=1&limit=10&cursor=123` | 메뉴별 커서 목록, menuId 생략 시 전체 |
-| GET `/posts/search?keyword=치즈&menuId=1&offset=0&limit=10&sort=relevance` | 리뷰 제목·본문·메뉴명·브랜드명·태그 검색 |
-| GET `/search?keyword=치즈&menuOffset=0&reviewOffset=0&limit=10&sort=relevance` | 메뉴와 리뷰를 함께 반환, 각각 독립 페이지 |
+| 기능 | 설명 |
+| --- | --- |
+| 브랜드·메뉴 탐색 | 브랜드별 메뉴 정보를 조회하고 키워드, 브랜드, 가격을 기준으로 검색할 수 있습니다. |
+| 버거 리뷰 | 메뉴별 리뷰를 작성하고 1~5점 평점, 맛과 식감에 대한 평가 태그, 사진을 남길 수 있습니다. |
+| 통합 검색 | 메뉴명, 브랜드명, 리뷰 제목·본문, 평가 태그를 검색하고 메뉴와 리뷰를 함께 확인할 수 있습니다. |
+| 커뮤니티 | 댓글과 좋아요를 통해 다른 사용자의 리뷰에 반응하고 경험을 공유할 수 있습니다. |
 
-`limit`은 1~100, offset은 0~10000, 검색어는 공백 제외 1~100자다. 검색어 앞뒤 공백을 제거한다. 메뉴 목록의 keyword는 생략할 수 있다. 응답의 `hasNext`는 limit+1개를 조회해 결정하며 총 개수 쿼리는 수행하지 않는다.
+## Architecture
 
-`sort`는 `recent` 또는 `relevance`다. relevance는 제목(메뉴는 이름) 포함 우선, 다음 본문(메뉴는 설명) 포함, 마지막 ID 내림차순이다. BM25 점수나 메뉴·리뷰를 섞은 전역 순위가 아니다. 통합 응답은 `data.menus`, `data.reviews` 두 묶음이며 각 offset과 hasNext를 반환한다.
+동일한 커뮤니티 서비스를 두 개의 독립된 환경에서 구성하여 부하 테스트와 배포 안정성을 검증합니다.
 
-작성 예시:
+```mermaid
+flowchart LR
+    Client[API Client]
 
-```json
-{
-  "menuId": 1,
-  "rating": 4,
-  "tags": ["CHEESY", "THICK_PATTY"],
-  "title": "두꺼운 패티가 좋았던 버거",
-  "content": "치즈 맛이 진하고 패티에 육즙이 있었다.",
-  "attachFileUrl": null
-}
+    subgraph ECS["AWS ECS · main / dev"]
+        direction LR
+        ALB[ALB] --> App1[Community Service]
+        App1 --> Data1[(MySQL / Redis)]
+    end
+
+    subgraph K8S["Kubernetes Lab"]
+        direction LR
+        SVC[Active Service] --> App2[Community Service]
+        App2 --> Data2[(MySQL / Redis)]
+    end
+
+    Client --> ALB
+    Client --> SVC
 ```
 
-수정은 위 필드 중 menuId를 제외한다. 허용 태그: `SPICY`(매콤), `THICK_PATTY`(두꺼운 패티), `GOOD_VALUE`(가성비), `CHEESY`(치즈), `JUICY`(육즙), `CRISPY`(바삭), `HANDMADE`(수제버거). 한글 태그 라벨에 포함되는 검색어나 enum 이름으로도 리뷰를 찾을 수 있다. 태그는 작성자의 평가이며 재료 사실 정보가 아니다.
+| 환경 | 배포 경로 | 목적 |
+| --- | --- | --- |
+| AWS ECS | GitHub Actions → ECR → CodeDeploy | main/dev 분리, API 부하 테스트 및 Blue-Green 배포 |
+| Kubernetes Lab | GitHub Actions → GHCR → GitOps → Argo CD / Argo Rollouts | 승격 전 API 검증 및 Prometheus 오류율 기반 롤백 실습 |
 
-현재 LIKE는 입력 문자열의 포함 여부를 검사한다. 자연어 문장의 의도·동의어·유사 메뉴·재료 제외는 해석하지 않는다. 예를 들어 “피클 없는”을 문자열 검색하는 것은 피클이 없음을 보장하지 않는다. 이 한계를 정답 질의와 함께 측정한 뒤 분석기·검색 모델·재료 구조를 개선한다.
+다이어그램은 서비스 요청 경로를 중심으로 단순화했습니다. ECS의 main/dev는 각각 독립된 애플리케이션과 데이터 저장소를 사용하며, Kubernetes Lab은 별도 실습 환경입니다. 세부 배포 및 모니터링 구성은 관련 저장소를 참고할 수 있습니다.
 
-## 로컬 실행과 데이터
 
-Java 21, MySQL 8.0, Redis 7.2 환경을 준비한다. 개발 환경은 별도 `local` 설정을 참조하므로 없으면 include를 비운다.
-
-```sh
-export DB_HOST=127.0.0.1 DB_PORT=3306 DB_NAME=amumal DB_USERNAME=amumal
-export DB_PASSWORD='로컬 DB 비밀번호'
-export REDIS_HOST=127.0.0.1 REDIS_PORT=6379 REDIS_SSL_ENABLED=false
-SPRING_PROFILES_INCLUDE= ./gradlew bootRun
-```
-
-시작 시 Flyway V6까지 적용한다. 브랜드·메뉴 관리 CRUD는 만들지 않았고 운영 데이터는 출처를 검증한 후 별도 SQL/데이터 적재 과정으로 넣는다. 빠른 개발 확인에는 아래 합성 데이터 3건을 사용할 수 있다. 자동으로 시드하지 않으며, 실행 대상 DB를 확인한 뒤 한 번 넣는다.
-
-```sh
-mysql -h 127.0.0.1 -u amumal -p amumal < scripts/seed-burger-demo.sql
-```
-
-`GET /v1/menus`에서 실제 발급된 ID를 확인하고 리뷰에 사용한다. 합성 데이터는 검색 실험용 실측 자료나 실제 메뉴로 간주하지 않는다.
-
-## 최적화 이전의 기능 추가 기준선
-
-기존 작성자 fetch join과 커서 페이지네이션만 유지한다. 새 메뉴·브랜드·태그는 기본 지연 조회를 사용하며, fetch join·batch fetch·검색용 복합 인덱스를 추가하지 않는다. SQL 실행 횟수를 줄이는 목표나 성능 개선 주장은 없다. 데이터 규모를 늘리고 실제 쿼리 수와 지연을 측정한 뒤 최적화는 별도 변경으로 진행한다.
-
-기존 인증 경로 문제와 댓글·좋아요·이미지 매핑이 있는 게시글의 삭제 제약 문제도 기존 상태로 남긴다. 새 도메인 필드의 유효성 검사와 정상 조회를 위한 변경만 포함한다.
-
-## 검증과 다음 단계
-
-```sh
-./gradlew test spotlessCheck bootJar
-```
-
-테스트는 기존 커서 페이지 누락·중복과 조회수 flush를 유지하며 메뉴 필터·평점·태그 갱신·서비스 계층 작성자 권한·통합 검색·기존 행 보존을 검증한다. 리뷰 HTTP 쓰기 테스트는 사용자 ID가 이미 해석된 요청으로 새 필드를 확인하며 실제 로그인 인증 흐름을 검증하지 않는다. 기본은 MySQL 모드 H2이며 실제 MySQL에서도 별도로 실행한다.
-
-다음 순서는 메뉴 출처 수집/정제 → 재현 가능한 합성 리뷰와 정답 질의 구축 → LIKE 실행 계획과 p95/p99·RPS 측정 → 같은 조건의 Elasticsearch 비교 → Nori/BM25 품질 튜닝 → 동기화 장애 실험이다. 측정 전 성능 개선 수치를 주장하지 않는다.
-
-배포와 서버 켜기/끄기는 [DEPLOYMENT.md](DEPLOYMENT.md)를 참고한다. 이 도메인 변경을 AWS에 배포하려면 별도 푸시·배포가 필요하며, 중지된 서버를 켜면 배포 전까지 기존 이미지가 실행된다.
+기술적 의사결정 및 실험 과정은 [기술 블로그](https://velog.io/@xezixx/posts)에 기록합니다. 배포 환경의 상세 설정은 [DEPLOYMENT.md](DEPLOYMENT.md)를 참고할 수 있습니다.
