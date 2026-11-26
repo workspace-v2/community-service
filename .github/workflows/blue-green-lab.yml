@@ -35,6 +35,8 @@ jobs:
               - 'src/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle.properties'
+              - 'gradle.lockfile'
               - 'gradlew'
               - 'gradle/**'
               - 'Dockerfile*'
@@ -45,8 +47,10 @@ jobs:
               - 'build.gradle'
               - 'settings.gradle'
               - 'gradle.properties'
+              - 'gradle.lockfile'
               - 'gradlew'
               - 'gradle/**'
+              - '.github/actions/scan-java-jar/**'
 
   verify:
     needs: changes
@@ -58,16 +62,33 @@ jobs:
   dependency-scan:
     name: Java dependency scan
     needs: [changes, verify]
-    if: github.event_name == 'pull_request' && needs.changes.outputs.dependencies == 'true'
+    if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
     steps:
+      - name: Check required validation results
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          APP_CHANGED: ${{ needs.changes.outputs.app }}
+          DEPENDENCIES_CHANGED: ${{ needs.changes.outputs.dependencies }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+        run: |
+          case "$CHANGES_RESULT:$APP_CHANGED:$DEPENDENCIES_CHANGED:$VERIFY_RESULT" in
+            success:false:false:skipped|success:true:false:success|success:true:true:success)
+              ;;
+            *)
+              echo "::error::Required validation did not complete successfully (changes=$CHANGES_RESULT, app=$APP_CHANGED, dependencies=$DEPENDENCIES_CHANGED, verify=$VERIFY_RESULT)."
+              exit 1
+              ;;
+          esac
       - uses: actions/checkout@v4
+        if: needs.changes.outputs.dependencies == 'true'
         with:
           persist-credentials: false
       - uses: ./.github/actions/scan-java-jar
+        if: needs.changes.outputs.dependencies == 'true'
 
   publish:
     needs: verify
