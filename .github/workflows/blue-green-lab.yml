@@ -24,6 +24,7 @@ jobs:
       pull-requests: read
     outputs:
       app: ${{ steps.filter.outputs.app }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
@@ -40,6 +41,12 @@ jobs:
               - '.dockerignore'
               - 'Dockerfile*.dockerignore'
               - '.github/**'
+            dependencies:
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle.properties'
+              - 'gradlew'
+              - 'gradle/**'
 
   verify:
     needs: changes
@@ -51,7 +58,7 @@ jobs:
   dependency-scan:
     name: Java dependency scan
     needs: [changes, verify]
-    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
+    if: github.event_name == 'pull_request' && needs.changes.outputs.dependencies == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
