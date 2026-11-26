@@ -1,0 +1,26 @@
+name: Scheduled Java Dependency Scan
+
+on:
+  schedule:
+    - cron: '23 0 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  package-jar:
+    uses: ./.github/workflows/verify-java.yml
+    with:
+      run-unit-and-h2-tests: false
+      run-mysql-integration: false
+
+  scan:
+    name: Scan default-branch JAR
+    needs: package-jar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/scan-java-jar

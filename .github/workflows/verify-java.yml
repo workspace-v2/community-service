@@ -9,6 +9,9 @@ on:
       publish-jar:
         type: boolean
         default: true
+      run-unit-and-h2-tests:
+        type: boolean
+        default: true
       run-mysql-integration:
         type: boolean
         default: true
@@ -42,8 +45,12 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Run Java tests and package the JAR when requested
-        run: ./gradlew --no-daemon test ${{ inputs.publish-jar && 'bootJar' || '' }}
+      - name: Run requested Java tests and packaging
+        if: inputs.run-unit-and-h2-tests || inputs.publish-jar
+        run: >-
+          ./gradlew --no-daemon
+          ${{ inputs.run-unit-and-h2-tests && 'test' || '' }}
+          ${{ inputs.publish-jar && 'bootJar' || '' }}
       - name: MySQL migration and integration tests
         if: inputs.run-mysql-integration
         run: ./gradlew --no-daemon test --rerun --tests '*MySqlMigrationIntegrationTest'
