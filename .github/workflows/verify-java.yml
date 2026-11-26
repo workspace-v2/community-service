@@ -43,7 +43,7 @@ jobs:
         run: ./gradlew --no-daemon test bootJar
       - name: MySQL migration and integration tests
         if: inputs.run-mysql-integration
-        run: ./gradlew --no-daemon test --rerun-tasks
+        run: ./gradlew --no-daemon test --tests '*MySqlMigrationIntegrationTest' --rerun-tasks
         env:
           SPRING_APPLICATION_JSON: >-
             {"spring":{"datasource":{"url":"jdbc:mysql://127.0.0.1:3306/amumal?connectionTimeZone=Asia/Seoul","username":"amumal","password":"ci-password","driver-class-name":"com.mysql.cj.jdbc.Driver"}}}
