@@ -3,16 +3,6 @@ name: Blue-Green Lab GitOps
 on:
   pull_request:
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'build.gradle'
-      - 'settings.gradle'
-      - 'gradlew'
-      - 'gradle/**'
-      - 'Dockerfile*'
-      - '.dockerignore'
-      - 'Dockerfile*.dockerignore'
-      - '.github/**'
   workflow_dispatch:
     inputs:
       update_gitops:
@@ -28,14 +18,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            app:
+              - 'src/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradlew'
+              - 'gradle/**'
+              - 'Dockerfile*'
+              - '.dockerignore'
+              - 'Dockerfile*.dockerignore'
+              - '.github/**'
+
   verify:
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    needs: changes
+    if: >-
+      (github.event_name == 'pull_request' && needs.changes.outputs.app == 'true') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     uses: ./.github/workflows/verify-java.yml
 
   dependency-scan:
     name: Java dependency scan
-    needs: verify
-    if: github.event_name == 'pull_request'
+    needs: [changes, verify]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
